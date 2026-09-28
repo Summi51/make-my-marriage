@@ -1,0 +1,9 @@
+.next/
+coverage/
+node_modules/
+
+# Preserve source-document formatting.
+docs/API_DESIGN.md
+docs/DATABASE_DESIGN.md
+docs/PRD.md
+docs/SYSTEM_DESIGN.md
