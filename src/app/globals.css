@@ -1,18 +1,140 @@
 @import "tailwindcss";
+@import "./fonts.css";
 
-:root {
-  --background: #fffaf7;
-  --foreground: #2d1b20;
+@theme {
+  --color-brand-cream: #faf8f5;
+  --color-brand-cream-card: #f5efeb;
+  --color-brand-cream-warm: #f4ece3;
+  --color-brand-cream-light: #fdfcfa;
+  --color-brand-border: #ebe3da;
+  --color-brand-wine: #6b1b34;
+  --color-brand-wine-dark: #521427;
+  --color-brand-wine-light: #8a2544;
+  --color-brand-wine-deep: #4a1020;
+  --color-brand-rose: #a26769;
+  --color-brand-gold: #d4af37;
+  --color-brand-gold-cream: #f3e5d4;
+  --color-brand-gold-button: #e6c8a4;
+  --color-brand-gold-hover: #dcb98d;
+  --color-brand-charcoal: #2d3748;
+  --color-brand-muted: #71717a;
+  --color-brand-muted-warm: #937c6e;
+  --color-brand-slate: #3f4941;
+  --color-accent-tan: #a87456;
+  --color-accent-gold-text: #e8c2b3;
+  --color-avatar-warm: #a87456;
+  --color-avatar-sage: #9ccb9c;
+  --color-avatar-taupe: #c2b7a8;
+  --font-sans: "Plus Jakarta Sans", Arial, Helvetica, sans-serif;
+  --font-serif: "Cormorant Garamond", Georgia, serif;
+  --shadow-soft:
+    0 10px 30px -10px rgb(107 27 52 / 5%), 0 4px 12px -2px rgb(0 0 0 / 2%);
+  --shadow-window:
+    0 25px 60px -15px rgb(80 20 40 / 12%), 0 10px 25px -8px rgb(0 0 0 / 4%);
 }
 
-* {
-  box-sizing: border-box;
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 6.5rem;
 }
 
 body {
   min-height: 100vh;
   margin: 0;
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-brand-cream);
+  color: var(--color-brand-charcoal);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--color-brand-wine);
+  color: white;
+}
+
+.font-editorial {
+  font-family: var(--font-serif);
+}
+
+button {
+  cursor: pointer;
+}
+
+a,
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-brand-wine-light);
+  outline-offset: 5px;
+}
+
+body:has(dialog[open]) {
+  overflow: hidden;
+}
+
+.skip-link {
+  position: fixed;
+  top: -5rem;
+  left: 1rem;
+  z-index: 60;
+  padding: 0.8rem 1rem;
+  border-radius: 0.5rem;
+  background: white;
+  color: var(--color-brand-wine);
+}
+
+.skip-link:focus {
+  top: 1rem;
+}
+
+.homepage-dialog {
+  width: min(92vw, 34rem);
+  max-height: 85dvh;
+  margin: auto;
+  padding: 0;
+  border: 1px solid var(--color-brand-border);
+  border-radius: 1.25rem;
+  background: var(--color-brand-cream);
+  color: var(--color-brand-charcoal);
+  text-align: left;
+  box-shadow: var(--shadow-window);
+}
+
+.homepage-dialog::backdrop {
+  background: rgb(35 20 26 / 50%);
+  backdrop-filter: blur(4px);
+}
+
+.dialog-content {
+  padding: clamp(1.25rem, 5vw, 2rem);
+}
+
+.dialog-close {
+  flex-shrink: 0;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid var(--color-brand-border);
+  border-radius: 50%;
+  font-size: 1.6rem;
+  color: var(--color-brand-wine);
+}
+
+.dialog-close:hover {
+  background: #efe4df;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }
