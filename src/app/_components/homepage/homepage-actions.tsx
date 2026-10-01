@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useRef, type ReactNode } from "react";
+import Link from "next/link";
 
 function PreviewDialog({
   label,
@@ -67,25 +68,16 @@ function PreviewDialog({
 export function AvailabilityButton({
   children,
   className = "",
+  href = "/signup",
 }: {
   children: ReactNode;
   className?: string;
+  href?: string;
 }) {
   return (
-    <PreviewDialog
-      label={children}
-      className={className}
-      title="A little more joy is on its way"
-    >
-      <p className="text-sm leading-7 text-gray-600">
-        We’re getting Make My Marriage ready for your big day. Account creation
-        and sign-in aren’t available yet.
-      </p>
-      <p className="mt-3 text-sm leading-7 text-gray-600">
-        For now, explore the sample wedding and see how your family’s plans can
-        come together.
-      </p>
-    </PreviewDialog>
+    <Link href={href} className={className}>
+      {children}
+    </Link>
   );
 }
 

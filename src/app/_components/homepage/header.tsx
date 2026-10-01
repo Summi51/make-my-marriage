@@ -73,7 +73,10 @@ export function Header() {
           ))}
         </nav>
         <div className="flex items-center gap-6">
-          <AvailabilityButton className="hover:text-brand-wine hidden py-3 text-[15px] font-medium text-gray-700 lg:block">
+          <AvailabilityButton
+            href="/login"
+            className="hover:text-brand-wine hidden py-3 text-[15px] font-medium text-gray-700 lg:block"
+          >
             Sign In
           </AvailabilityButton>
           <AvailabilityButton className="bg-brand-wine hover:bg-brand-wine-dark shadow-brand-wine/20 hidden rounded-xl px-5 py-2.5 text-[14.5px] font-medium text-white shadow-sm transition-colors sm:block">
@@ -126,7 +129,10 @@ export function Header() {
           <AvailabilityButton className="bg-brand-wine rounded-xl px-5 py-3 text-sm text-white">
             Start Planning
           </AvailabilityButton>
-          <AvailabilityButton className="text-brand-wine px-3 py-3 text-sm">
+          <AvailabilityButton
+            href="/login"
+            className="text-brand-wine px-3 py-3 text-sm"
+          >
             Sign In
           </AvailabilityButton>
         </div>
