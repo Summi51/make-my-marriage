@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
+import { AUTH_CHANNEL } from "../homepage/session-actions";
 
 export function AuthForm({ mode }: { mode: "signup" | "login" }) {
   const signup = mode === "signup";
@@ -54,6 +55,13 @@ export function AuthForm({ mode }: { mode: "signup" | "login" }) {
       if (!response.ok) {
         setError(result.error?.message ?? "Please try again.");
         return;
+      }
+      try {
+        const channel = new BroadcastChannel(AUTH_CHANNEL);
+        channel.postMessage("login");
+        channel.close();
+      } catch {
+        // Older browsers still sign in in this tab.
       }
       router.replace("/account");
       router.refresh();

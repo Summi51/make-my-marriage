@@ -6,7 +6,7 @@ Update this file when a major feature is completed. Do not log small fixes, copy
 
 ## Current state
 
-Foundation, the public homepage, database infrastructure, account authentication, and wedding tenancy are built. Wedding creation and the wedding home are on screen. Edit details, member management screens, and external integrations have not started.
+Foundation, the public homepage, database infrastructure, account authentication, and wedding tenancy are built. Wedding creation, the wedding home, and editing wedding details are on screen. Member management screens and external integrations have not started.
 
 ## Completed
 
@@ -42,24 +42,38 @@ Foundation, the public homepage, database infrastructure, account authentication
 ### Wedding tenancy
 
 - Wedding and membership models. A person belongs to one wedding. Creating a wedding and its Admin membership happens in one transaction.
-- Create, read, and update wedding routes. The wedding comes from the signed-in membership, not from a client-supplied wedding id. The website slug stays the same when names or the date change.
+- Create, read, and update wedding routes. The wedding comes from the signed-in membership, not from a client-supplied wedding id. Saving a new name or date updates the website slug. The gallery token does not change.
 - Member list, role change, and removal routes. Only an Admin can change roles or remove a member. The last Admin cannot be changed or removed, including when two removals happen at the same time.
 - Login and current-user responses include the real membership after a wedding exists.
-- API tests cover creation, duplicate membership, impossible dates, request size, slug stability, last Admin, and cross-wedding access.
+- API tests cover creation, duplicate membership, impossible dates, request size, slug updates, last Admin, and cross-wedding access.
 
 ### Wedding setup and home
 
 - After sign-in, a person with no wedding sees the wedding setup screen. Creating a wedding makes them its Admin and shows the wedding home.
-- The wedding home shows the couple, date, days remaining, location, time zone, title, and the stable wedding address.
+- The wedding home shows the couple, date, days remaining, location, time zone, title, and the wedding address. The workspace header shows the signed-in name and Admin or Manager role. The logo returns to the public homepage.
 - Reviewed and verified in Chrome: signup, logout, sign-in, wedding validation, bride and groom creation, refresh, and return after signing in again.
-- Edit details and wedding member screens are not built yet. Events, guests, and invitations are not shown as working actions.
+- Wedding member screens are not built yet. Events, guests, and invitations are not shown as working actions.
+
+### Edit wedding details
+
+- Edit wedding on the wedding home opens a page prefilled with the saved names, date, location, title, description, and time zone.
+- Save changes updates the overview, countdown, and wedding address. Cancel leaves the saved wedding unchanged and clears the unsaved draft.
+- If the session expires while editing, the draft stays in this tab and returns after sign-in.
+- Reviewed and verified in Chrome: prefilled edit, address preview, cancel, save, countdown, and refresh.
+
+### Homepage session actions
+
+- A signed-out visit keeps Sign In and Start Planning.
+- A signed-in visit with no wedding shows Continue setup and opens wedding setup.
+- A signed-in visit with a wedding shows Go to your wedding and opens the overview.
+- Signing in, creating a wedding, or signing out in another tab updates the header, mobile menu, hero, and closing planning buttons.
 
 ## Not started
 
 - Password recovery and email delivery.
-- Edit wedding details and wedding member management screens.
+- Wedding member management screens.
 - Dashboard, events, tasks, guests, invitations, expenses, vendors, website, gallery and livestream.
 
 ## Next
 
-Edit wedding details and wedding members, once those Stitch screens are approved.
+Wedding member invitations, once that Stitch screen is approved. An already open account page still needs a refresh after another tab signs out.

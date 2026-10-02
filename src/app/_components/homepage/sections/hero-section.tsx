@@ -1,4 +1,4 @@
-import { AvailabilityButton } from "../homepage-actions";
+import { PlanningButton } from "../planning-button";
 
 export function HeroSection() {
   return (
@@ -23,10 +23,10 @@ export function HeroSection() {
         </p>
 
         <div className="mb-9 flex flex-col items-center gap-4 sm:flex-row">
-          <AvailabilityButton className="bg-brand-wine hover:bg-brand-wine-dark inline-flex w-full items-center justify-center gap-3 rounded-xl px-7 py-3.5 text-[15.5px] font-medium text-white shadow-md transition-all sm:w-auto">
-            <span>Start Planning for Free</span>
-            <span className="text-lg">→</span>
-          </AvailabilityButton>
+          <PlanningButton
+            prominent
+            className="bg-brand-wine hover:bg-brand-wine-dark inline-flex w-full items-center justify-center gap-3 rounded-xl px-7 py-3.5 text-[15.5px] font-medium text-white shadow-md transition-all sm:w-auto"
+          />
           <a
             className="inline-flex w-full items-center justify-center gap-2.5 rounded-xl border border-[#E4DBD0] bg-[#F4EFEA] px-6 py-3.5 text-[15.5px] font-medium text-gray-800 transition-colors hover:bg-[#EDE5DE] sm:w-auto"
             href="#how-it-works"

@@ -92,10 +92,14 @@ describe("wedding API", () => {
     return cookieOf(response);
   }
 
-  it("creates one Admin wedding and keeps the slug when details change", async () => {
+  it("creates one Admin wedding and updates the slug when names change", async () => {
     const cookie = await signUp("ayesha@example.com");
     const created = await createWeddingRoute(
-      weddingRequest("POST", "/api/wedding", cookie, wedding),
+      weddingRequest("POST", "/api/wedding", cookie, {
+        ...wedding,
+        title: "Meher & Zayan",
+        description: "A family Walima.",
+      }),
     );
     expect(created.status).toBe(201);
     const body = await created.json();
@@ -112,15 +116,33 @@ describe("wedding API", () => {
 
     const updated = await updateWeddingRoute(
       weddingRequest("PATCH", "/api/wedding", cookie, {
-        brideName: "Meher",
+        brideName: "Simran",
+        groomName: "Aman",
         location: { city: "Karachi" },
       }),
     );
     expect(updated.status).toBe(200);
     const saved = await Wedding.findOne().lean();
-    expect(saved?.website?.slug).toBe("meher-fatima-zayan-malik-18122027");
+    expect(saved?.brideName).toBe("Simran");
+    expect(saved?.groomName).toBe("Aman");
+    expect(saved?.website?.slug).toBe("simran-aman-18122027");
     expect(saved?.location?.formattedAddress).toBe("Karachi, Pakistan");
     expect(saved?.location?.city).toBe("Karachi");
+
+    const cleared = await updateWeddingRoute(
+      weddingRequest("PATCH", "/api/wedding", cookie, {
+        title: "",
+        description: null,
+        location: { formattedAddress: "" },
+      }),
+    );
+    expect(cleared.status).toBe(200);
+    const afterClear = await Wedding.findOne().lean();
+    expect(afterClear?.title).toBeNull();
+    expect(afterClear?.description).toBeNull();
+    expect(afterClear?.location?.formattedAddress).toBeNull();
+    expect(afterClear?.website?.slug).toBe("simran-aman-18122027");
+    expect(afterClear?.gallery?.tokenHash).toBe(saved?.gallery?.tokenHash);
   });
 
   it("rejects an impossible date, an empty update, and an oversized body", async () => {

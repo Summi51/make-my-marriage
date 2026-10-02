@@ -4,7 +4,10 @@ import {
   updateWedding,
   toWeddingDto,
 } from "@/modules/wedding/use-cases";
-import { createWeddingSchema, updateWeddingSchema } from "@/modules/wedding/schemas";
+import {
+  createWeddingSchema,
+  updateWeddingSchema,
+} from "@/modules/wedding/schemas";
 import { requireUser, requireWeddingContext } from "@/server/wedding/context";
 import { checkOrigin, parseBody, weddingFailure } from "@/server/wedding/http";
 

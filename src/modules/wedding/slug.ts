@@ -15,16 +15,22 @@ function datePart(weddingDate: string) {
   return `${day}${month}${year}`;
 }
 
-/** Builds a stable, unique wedding website slug. Does not change once created. */
+/** Builds a unique wedding website slug from the names and date. */
 export async function generateUniqueSlug(
   brideName: string,
   groomName: string,
   weddingDate: string,
+  excludeWeddingId?: string,
 ) {
   const base = `${slugifyName(brideName)}-${slugifyName(groomName)}-${datePart(weddingDate)}`;
   let candidate = base;
   let suffix = 2;
-  while (await Wedding.exists({ "website.slug": candidate })) {
+  while (
+    await Wedding.exists({
+      "website.slug": candidate,
+      ...(excludeWeddingId ? { _id: { $ne: excludeWeddingId } } : {}),
+    })
+  ) {
     candidate = `${base}-${suffix}`;
     suffix += 1;
   }

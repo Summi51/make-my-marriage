@@ -1,4 +1,4 @@
-import { AvailabilityButton } from "../homepage-actions";
+import { PlanningButton } from "../planning-button";
 import { HeartIcon } from "../icons";
 
 export function BottomWineCTABanner() {
@@ -26,10 +26,10 @@ export function BottomWineCTABanner() {
         </p>
 
         <div className="mb-6">
-          <AvailabilityButton className="inline-flex items-center gap-3 rounded-xl bg-[#E9CFB0] px-8 py-3.5 text-sm font-semibold text-[#4A1624] shadow-md transition-all hover:bg-[#DFC2A0] md:text-base">
-            <span>Start Planning for Free</span>
-            <span>→</span>
-          </AvailabilityButton>
+          <PlanningButton
+            prominent
+            className="inline-flex items-center gap-3 rounded-xl bg-[#E9CFB0] px-8 py-3.5 text-sm font-semibold text-[#4A1624] shadow-md transition-all hover:bg-[#DFC2A0] md:text-base"
+          />
         </div>
 
         <div className="flex flex-wrap items-center justify-center gap-6 text-xs text-[#E1D1C5]">

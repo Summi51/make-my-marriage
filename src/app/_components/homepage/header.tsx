@@ -2,6 +2,8 @@
 
 import { useRef, useState } from "react";
 import { AvailabilityButton } from "./homepage-actions";
+import { useHomepageSession } from "./homepage-session";
+import { homepageActions } from "./session-actions";
 
 const links = [
   ["Features", "#features"],
@@ -11,7 +13,9 @@ const links = [
 
 export function Header() {
   const [open, setOpen] = useState(false);
+  const session = useHomepageSession();
   const menuButton = useRef<HTMLButtonElement>(null);
+  const actions = homepageActions(session);
   return (
     <header
       className="border-brand-border/70 bg-brand-cream/90 sticky top-0 z-40 border-b backdrop-blur-md"
@@ -73,14 +77,19 @@ export function Header() {
           ))}
         </nav>
         <div className="flex items-center gap-6">
+          {actions.secondary ? (
+            <AvailabilityButton
+              href={actions.secondary.href}
+              className="hover:text-brand-wine hidden py-3 text-[15px] font-medium text-gray-700 lg:block"
+            >
+              {actions.secondary.label}
+            </AvailabilityButton>
+          ) : null}
           <AvailabilityButton
-            href="/login"
-            className="hover:text-brand-wine hidden py-3 text-[15px] font-medium text-gray-700 lg:block"
+            href={actions.primary.href}
+            className="bg-brand-wine hover:bg-brand-wine-dark shadow-brand-wine/20 hidden rounded-xl px-5 py-2.5 text-[14.5px] font-medium text-white shadow-sm transition-colors sm:block"
           >
-            Sign In
-          </AvailabilityButton>
-          <AvailabilityButton className="bg-brand-wine hover:bg-brand-wine-dark shadow-brand-wine/20 hidden rounded-xl px-5 py-2.5 text-[14.5px] font-medium text-white shadow-sm transition-colors sm:block">
-            Start Planning
+            {actions.primary.label}
           </AvailabilityButton>
           <button
             ref={menuButton}
@@ -126,15 +135,20 @@ export function Header() {
           </a>
         ))}
         <div className="mt-3 flex flex-wrap items-center gap-5">
-          <AvailabilityButton className="bg-brand-wine rounded-xl px-5 py-3 text-sm text-white">
-            Start Planning
-          </AvailabilityButton>
           <AvailabilityButton
-            href="/login"
-            className="text-brand-wine px-3 py-3 text-sm"
+            href={actions.primary.href}
+            className="bg-brand-wine rounded-xl px-5 py-3 text-sm text-white"
           >
-            Sign In
+            {actions.primary.label}
           </AvailabilityButton>
+          {actions.secondary ? (
+            <AvailabilityButton
+              href={actions.secondary.href}
+              className="text-brand-wine px-3 py-3 text-sm"
+            >
+              {actions.secondary.label}
+            </AvailabilityButton>
+          ) : null}
         </div>
       </nav>
     </header>

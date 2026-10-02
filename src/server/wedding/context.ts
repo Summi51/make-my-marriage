@@ -11,17 +11,12 @@ export async function requireWeddingContext(
   const user = await findSessionUser(
     request.cookies.get(SESSION_COOKIE)?.value,
   );
-  if (!user)
-    throw new WeddingError("UNAUTHENTICATED", "Please sign in.", 401);
+  if (!user) throw new WeddingError("UNAUTHENTICATED", "Please sign in.", 401);
   const { membership, wedding } = await getMembershipContext(user.id);
   if (!membership || !wedding)
     throw new WeddingError("NOT_FOUND", "You do not belong to a wedding.", 404);
   if (options?.requireRole === "ADMIN" && membership.role !== "ADMIN")
-    throw new WeddingError(
-      "FORBIDDEN",
-      "Only an Admin can do this.",
-      403,
-    );
+    throw new WeddingError("FORBIDDEN", "Only an Admin can do this.", 403);
   return { user, membership, wedding };
 }
 
@@ -31,7 +26,6 @@ export async function requireUser(request: {
   const user = await findSessionUser(
     request.cookies.get(SESSION_COOKIE)?.value,
   );
-  if (!user)
-    throw new WeddingError("UNAUTHENTICATED", "Please sign in.", 401);
+  if (!user) throw new WeddingError("UNAUTHENTICATED", "Please sign in.", 401);
   return user;
 }

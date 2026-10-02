@@ -1,6 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import { AUTH_CHANNEL } from "../homepage/session-actions";
 
 const timeZones = [
   ["Asia/Karachi", "Asia/Karachi (GMT+05:00)"],
@@ -11,7 +12,7 @@ const timeZones = [
 ] as const;
 
 const inputClass =
-  "mt-2 h-12 w-full rounded-xl border border-[#ebe3db] bg-[#fbf8f5] px-4 font-sans text-sm text-[#1e1a1f] placeholder:text-[#a39a94] focus:border-[#6d213c] focus:bg-white focus:ring-4 focus:ring-[#6d213c]/10 [&:-webkit-autofill]:[-webkit-text-fill-color:#1e1a1f] [&:-webkit-autofill]:[font-family:var(--font-sans)] [&:-webkit-autofill]:[transition:background-color_9999s_ease-in-out_0s]";
+  "mt-1.5 h-12 w-full rounded-xl border border-[#D8D0C7] bg-white px-4 font-sans text-sm font-medium text-[#262424] placeholder:text-[#8C8583] outline-none transition-colors focus:border-[#6D213C] focus:ring-2 focus:ring-[#6D213C]/10 disabled:opacity-60";
 
 export function SetupForm() {
   const router = useRouter();
@@ -54,6 +55,13 @@ export function SetupForm() {
       if (!response.ok) {
         setError(result.error?.message ?? "Please try again.");
         return;
+      }
+      try {
+        const channel = new BroadcastChannel(AUTH_CHANNEL);
+        channel.postMessage("wedding");
+        channel.close();
+      } catch {
+        // Older browsers still show the wedding in this tab.
       }
       router.replace("/account");
       router.refresh();
@@ -196,7 +204,7 @@ export function SetupForm() {
 }
 
 const labelClass =
-  "block text-[11px] font-semibold tracking-[0.12em] text-[#3a3336] uppercase";
+  "block text-[11px] font-semibold tracking-wide text-[#262424] uppercase";
 
 function Required() {
   return <span className="text-[#9a435e]">*</span>;

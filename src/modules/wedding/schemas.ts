@@ -37,18 +37,26 @@ export const createWeddingSchema = z.object({
   location,
 });
 
+const optionalText = (max: number) =>
+  z
+    .string()
+    .trim()
+    .max(max)
+    .nullable()
+    .transform((value) => (value ? value : null));
+
 export const updateWeddingSchema = z
   .object({
     brideName: name,
     groomName: name,
-    title: z.string().trim().max(150),
-    description: z.string().trim().max(1000),
+    title: optionalText(150),
+    description: optionalText(1000),
     weddingDate,
     timeZone,
     location,
   })
   .partial()
-  .refine((value) => Object.keys(value).length > 0, {
+  .refine((value) => Object.values(value).some((item) => item !== undefined), {
     message: "Provide at least one field to update.",
   });
 

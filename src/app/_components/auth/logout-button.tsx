@@ -1,8 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-
-const AUTH_CHANNEL = "mmm-auth";
+import { AUTH_CHANNEL } from "../homepage/session-actions";
 
 export function LogoutButton() {
   const router = useRouter();

@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 function formatDate(value: string) {
   const [year, month, day] = value.split("-").map(Number);
   return new Date(Date.UTC(year, month - 1, day)).toLocaleDateString("en-GB", {
@@ -102,11 +104,16 @@ export function WeddingHome({
         <span className="font-medium text-[#1e1a1f]">
           {wedding.website.slug}
         </span>
-        . It stays the same if names or the date change.
+        . It updates when names or the date change.
       </p>
+      <Link
+        href="/account/wedding/edit"
+        className="mt-6 inline-flex h-12 items-center justify-center rounded-xl bg-[#5c1a33] px-5 text-[15px] font-medium text-white hover:bg-[#4a1529]"
+      >
+        Edit wedding
+      </Link>
       <p className="mt-3 text-[13px] text-[#867276]">
-        Events, guests and inviting family come next. You can change these
-        details later.
+        Events, guests and inviting family come next.
       </p>
     </div>
   );

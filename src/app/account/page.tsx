@@ -14,9 +14,13 @@ export const dynamic = "force-dynamic";
 
 const accountContext = cache(async () => {
   const user = await currentUser();
-  if (!user) return { user: null, wedding: null };
-  const { wedding } = await getMembershipContext(user.id);
-  return { user, wedding };
+  if (!user) return { user: null, wedding: null, role: undefined };
+  const { wedding, membership } = await getMembershipContext(user.id);
+  return {
+    user,
+    wedding,
+    role: membership?.role,
+  };
 });
 
 export async function generateMetadata() {
@@ -31,11 +35,12 @@ export async function generateMetadata() {
 
 export default async function AccountPage() {
   await connection();
-  const { user, wedding } = await accountContext();
+  const { user, wedding, role } = await accountContext();
   if (!user) redirect("/login");
+  const member = { name: user.name, role };
   if (!wedding) {
     return (
-      <WorkspaceChrome>
+      <WorkspaceChrome member={member}>
         <div className="mx-auto grid w-full max-w-6xl items-start gap-6 px-5 py-8 sm:px-8 lg:grid-cols-[minmax(0,1.7fr)_minmax(280px,1fr)] lg:py-10">
           <section className="rounded-[28px] border border-[#ebe5df] bg-white p-6 shadow-[0_1px_2px_rgba(30,26,31,0.04)] sm:p-9">
             <p className="text-[11px] font-semibold tracking-[0.18em] text-[#9a435e] uppercase">
@@ -45,9 +50,8 @@ export default async function AccountPage() {
               Let’s bring your wedding to life
             </h1>
             <p className="mt-4 max-w-lg text-[15px] leading-7 text-[#635559]">
-              Fill in the essential details to establish your dedicated
-              planning workspace for your Nikah, Walima, and family
-              celebrations.
+              Fill in the essential details to establish your dedicated planning
+              workspace for your Nikah, Walima, and family celebrations.
             </p>
             <div className="mt-8">
               <SetupForm />
@@ -102,7 +106,7 @@ export default async function AccountPage() {
     );
   }
   return (
-    <WorkspaceChrome>
+    <WorkspaceChrome member={member}>
       <WeddingHome wedding={toWeddingDto(wedding)} />
     </WorkspaceChrome>
   );
