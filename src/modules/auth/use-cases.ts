@@ -6,6 +6,7 @@ import { signupSchema, loginSchema } from "./schemas";
 import { AuthError } from "./errors";
 import { connectToDatabase } from "@/server/db";
 import { createSession } from "@/server/auth/sessions";
+import { getMembershipContext } from "@/modules/wedding/use-cases";
 
 const passwordOptions: HashOptions & { raw?: false } = {
   type: argon2id,
@@ -69,9 +70,10 @@ export async function login(input: z.infer<typeof loginSchema>) {
   if (!user || !valid)
     throw new AuthError("UNAUTHENTICATED", "Invalid email or password.", 401);
   const session = await createSession(user._id.toString());
+  const { membership } = await getMembershipContext(user._id.toString());
   return {
     user: { id: user._id.toString(), name: user.name, email: user.email },
     session,
-    hasWedding: false,
+    hasWedding: membership !== null,
   };
 }

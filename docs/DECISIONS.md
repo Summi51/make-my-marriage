@@ -23,7 +23,7 @@
 - `APP_ORIGIN` is the trusted public origin for mutation checks and is required in production. Local development defaults to the request origin. All auth responses disable caching.
 - Use atomic MongoDB fixed-window counters in the infrastructure collection `auth_rate_limits`, with hashed keys and TTL cleanup. Each 15-minute window allows five signup attempts or ten login attempts per normalized email. Shared application limits are 50 signup attempts and 200 login attempts per window, including successful attempts. This conservative initial traffic budget should be revisited before a larger launch; client-provided forwarding headers are not trusted. No Redis/provider integration is needed for this increment.
 - Playwright covers the first account browser journey against a production build and an isolated MongoDB server. Run `npm run test:e2e` after installing Chromium with `npx playwright install chromium`.
-- Until wedding tenancy is implemented, users have no membership: auth returns `hasWedding: false`, and `/api/auth/me` returns null membership/wedding. `/account` is the temporary post-login destination. Password recovery is deferred to its own increment; V1 still does not require email verification.
+- A new account has no membership, so signup returns `hasWedding: false` and `/api/auth/me` returns null membership and wedding. Login and `/api/auth/me` return the real membership after a wedding is created. `/account` is the post-login destination. Password recovery is deferred to its own increment; V1 still does not require email verification.
 
 ## Remaining unresolved decisions
 

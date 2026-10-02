@@ -69,10 +69,12 @@ test("signup, refresh, logout and login through the browser", async ({
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(page).toHaveURL(/\/account$/);
   await expect(
-    page.getByRole("heading", { name: "Welcome, Saman Test." }),
+    page.getByRole("heading", { name: "Let’s bring your wedding to life" }),
   ).toBeVisible();
   await page.reload();
-  await expect(page.getByText("Your account is ready.")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Let’s bring your wedding to life" }),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Sign out", exact: true }).click();
   await expect(page).toHaveURL(/\/login$/);
   await page.goto("/account");

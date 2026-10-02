@@ -49,12 +49,12 @@ export function LogoutButton() {
       <button
         onClick={logout}
         disabled={pending}
-        className="bg-brand-wine mt-8 rounded-xl px-6 py-3 text-sm font-medium text-white disabled:opacity-60"
+        className="text-[13px] font-medium text-[#635559] underline-offset-4 hover:text-[#6d213c] hover:underline disabled:opacity-60"
       >
         {pending ? "Signing out…" : "Sign out"}
       </button>
       {error && (
-        <p role="alert" className="mt-3 text-sm text-red-800">
+        <p role="alert" className="text-sm text-red-800">
           {error}
         </p>
       )}
