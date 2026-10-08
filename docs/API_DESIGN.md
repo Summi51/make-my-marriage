@@ -905,7 +905,7 @@ Create secure invitation token
 ↓
 Create invitation record
 ↓
-Send email immediately through Resend
+Send email immediately through Volanea. The email links to the invitation landing page, which offers signup when the invited email has no account and sign-in when it does. Both preserve the invited email and return to this invitation before explicit acceptance.
 ```
 
 ### Response
@@ -965,17 +965,17 @@ Returns enough information to render the invitation page.
   "data": {
     "email": "rahul@example.com",
     "role": "MANAGER",
+    "accountExists": false,
     "wedding": {
       "brideName": "Princi",
       "groomName": "Akshay",
       "weddingDate": "2027-02-14"
-    },
-    "requiresLogin": true
+    }
   }
 }
 ```
 
-Do not expose internal Wedding information unnecessarily.
+`accountExists` is true only when the invited email already has an account. The invitation page uses it to offer sign-in or account creation. It is available only to someone holding the invitation token. Do not expose internal Wedding information unnecessarily.
 
 ---
 

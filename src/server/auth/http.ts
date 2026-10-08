@@ -2,7 +2,25 @@ import "server-only";
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import { AuthError } from "@/modules/auth/errors";
-import { cookieOptions, SESSION_COOKIE } from "./sessions";
+import {
+  cookieOptions,
+  findSessionUser,
+  cookieForTab,
+  requestTabId,
+} from "./sessions";
+
+export async function requireSignedOut(request: NextRequest) {
+  if (
+    await findSessionUser(
+      request.cookies.get(cookieForTab(requestTabId(request)))?.value,
+    )
+  )
+    throw new AuthError(
+      "ALREADY_SIGNED_IN",
+      "You are already signed in. Sign out before switching accounts.",
+      409,
+    );
+}
 
 export function checkOrigin(request: NextRequest) {
   const configured = process.env.APP_ORIGIN;
@@ -67,12 +85,13 @@ export function authResponse(
     session: { token: string; expiresAt: Date };
   },
   status: number,
+  tabId?: string | null,
 ) {
   const response = NextResponse.json(
     { data: { user: result.user, hasWedding: result.hasWedding } },
     { status, headers: { "Cache-Control": "no-store" } },
   );
-  response.cookies.set(SESSION_COOKIE, result.session.token, {
+  response.cookies.set(cookieForTab(tabId), result.session.token, {
     ...cookieOptions,
     expires: result.session.expiresAt,
   });

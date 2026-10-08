@@ -21,9 +21,14 @@ import {
 
 export const dynamic = "force-dynamic";
 
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
   await connection();
-  const user = await currentUser();
+  const { tab } = await searchParams;
+  const user = await currentUser(tab);
   const session = user
     ? sessionFromMembership(
         Boolean((await getMembershipContext(user.id)).wedding),

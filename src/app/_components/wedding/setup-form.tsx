@@ -1,4 +1,5 @@
 "use client";
+import { tabFetch, tabPath } from "@/lib/tab-session";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { AUTH_CHANNEL } from "../homepage/session-actions";
@@ -37,7 +38,7 @@ export function SetupForm() {
     const data = new FormData(event.currentTarget);
     const location = String(data.get("location") ?? "").trim();
     try {
-      const response = await fetch("/api/wedding", {
+      const response = await tabFetch("/api/wedding", {
         method: "POST",
         credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
@@ -63,7 +64,7 @@ export function SetupForm() {
       } catch {
         // Older browsers still show the wedding in this tab.
       }
-      router.replace("/account");
+      router.replace(tabPath("/account"));
       router.refresh();
     } catch {
       setError("We couldn’t connect. Please try again.");

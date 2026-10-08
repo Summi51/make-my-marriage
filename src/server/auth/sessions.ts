@@ -3,8 +3,28 @@ import { createHash, randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
 import { Session, User } from "@/modules/auth/models";
 import { connectToDatabase } from "@/server/db";
+import { TAB_HEADER } from "@/lib/tab-session";
 
-export const SESSION_COOKIE = "mmm_session";
+export function sessionCookieName(origin = process.env.APP_ORIGIN) {
+  if (origin) {
+    const url = new URL(origin);
+    if (["localhost", "127.0.0.1", "[::1]"].includes(url.hostname))
+      return `mmm_session_local_${url.port || (url.protocol === "https:" ? "443" : "80")}`;
+  }
+  return "mmm_session";
+}
+export const SESSION_COOKIE = sessionCookieName();
+export function cookieForTab(tabId?: string | null) {
+  if (tabId === null || tabId === undefined) return SESSION_COOKIE;
+  return /^[a-f0-9]{32}$/.test(tabId)
+    ? `${SESSION_COOKIE}_${tabId}`
+    : `${SESSION_COOKIE}_invalid`;
+}
+export function requestTabId(request: {
+  headers: { get(name: string): string | null };
+}) {
+  return request.headers.get(TAB_HEADER);
+}
 export const SESSION_SECONDS = 30 * 24 * 60 * 60;
 export const cookieOptions = {
   httpOnly: true,
@@ -37,8 +57,8 @@ export async function findSessionUser(token?: string) {
     : null;
 }
 
-export async function currentUser() {
-  return findSessionUser((await cookies()).get(SESSION_COOKIE)?.value);
+export async function currentUser(tabId?: string | null) {
+  return findSessionUser((await cookies()).get(cookieForTab(tabId))?.value);
 }
 
 export async function deleteSession(token: string) {

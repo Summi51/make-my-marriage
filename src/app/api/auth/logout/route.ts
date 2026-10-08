@@ -2,7 +2,8 @@ import { NextResponse, type NextRequest } from "next/server";
 import {
   findSessionUser,
   deleteSession,
-  SESSION_COOKIE,
+  cookieForTab,
+  requestTabId,
   cookieOptions,
 } from "@/server/auth/sessions";
 import { AuthError } from "@/modules/auth/errors";
@@ -11,7 +12,8 @@ export const runtime = "nodejs";
 export async function POST(request: NextRequest) {
   try {
     checkOrigin(request);
-    const token = request.cookies.get(SESSION_COOKIE)?.value;
+    const cookieName = cookieForTab(requestTabId(request));
+    const token = request.cookies.get(cookieName)?.value;
     if (!token || !(await findSessionUser(token)))
       throw new AuthError("UNAUTHENTICATED", "Please sign in.", 401);
     await deleteSession(token);
@@ -19,7 +21,7 @@ export async function POST(request: NextRequest) {
       { success: true },
       { headers: { "Cache-Control": "no-store" } },
     );
-    response.cookies.set(SESSION_COOKIE, "", {
+    response.cookies.set(cookieName, "", {
       ...cookieOptions,
       maxAge: 0,
       expires: new Date(0),

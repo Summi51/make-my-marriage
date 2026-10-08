@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 import "./globals.css";
+import { TabSessionBootstrap } from "./_components/tab-session-bootstrap";
 
 export const metadata: Metadata = {
   title: "Make My Marriage — Plan your entire wedding. Together.",
@@ -14,7 +15,10 @@ export default function RootLayout({
 }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <TabSessionBootstrap />
+        {children}
+      </body>
     </html>
   );
 }

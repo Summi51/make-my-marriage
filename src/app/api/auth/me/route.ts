@@ -1,5 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { findSessionUser, SESSION_COOKIE } from "@/server/auth/sessions";
+import {
+  findSessionUser,
+  cookieForTab,
+  requestTabId,
+} from "@/server/auth/sessions";
 import { AuthError } from "@/modules/auth/errors";
 import { authFailure } from "@/server/auth/http";
 import { getMembershipContext } from "@/modules/wedding/use-cases";
@@ -7,7 +11,7 @@ export const runtime = "nodejs";
 export async function GET(request: NextRequest) {
   try {
     const user = await findSessionUser(
-      request.cookies.get(SESSION_COOKIE)?.value,
+      request.cookies.get(cookieForTab(requestTabId(request)))?.value,
     );
     if (!user) throw new AuthError("UNAUTHENTICATED", "Please sign in.", 401);
     const { membership, wedding } = await getMembershipContext(user.id);

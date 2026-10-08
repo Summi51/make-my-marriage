@@ -3,9 +3,22 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import { AUTH_CHANNEL } from "../homepage/session-actions";
+import { tabFetch, tabPath } from "@/lib/tab-session";
 
-export function AuthForm({ mode }: { mode: "signup" | "login" }) {
+export function AuthForm({
+  mode,
+  nextPath = "/account",
+  email = "",
+}: {
+  mode: "signup" | "login";
+  nextPath?: string;
+  email?: string;
+}) {
+  const invitedEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : "";
   const signup = mode === "signup";
+  const switchParams = new URLSearchParams();
+  if (nextPath !== "/account") switchParams.set("next", nextPath);
+  if (invitedEmail) switchParams.set("email", invitedEmail);
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
@@ -15,13 +28,13 @@ export function AuthForm({ mode }: { mode: "signup" | "login" }) {
     let ignore = false;
     async function redirectIfSignedIn() {
       try {
-        const response = await fetch("/api/auth/me", {
+        const response = await tabFetch("/api/auth/me", {
           cache: "no-store",
           credentials: "same-origin",
         });
         if (ignore) return;
         if (response.ok) {
-          router.replace("/account");
+          router.replace(tabPath(nextPath));
           return;
         }
       } catch {
@@ -33,7 +46,7 @@ export function AuthForm({ mode }: { mode: "signup" | "login" }) {
     return () => {
       ignore = true;
     };
-  }, [router]);
+  }, [nextPath, router]);
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (pending) return;
@@ -41,7 +54,7 @@ export function AuthForm({ mode }: { mode: "signup" | "login" }) {
     setPending(true);
     const data = new FormData(event.currentTarget);
     try {
-      const response = await fetch(`/api/auth/${mode}`, {
+      const response = await tabFetch(`/api/auth/${mode}`, {
         method: "POST",
         credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
@@ -63,7 +76,7 @@ export function AuthForm({ mode }: { mode: "signup" | "login" }) {
       } catch {
         // Older browsers still sign in in this tab.
       }
-      router.replace("/account");
+      router.replace(tabPath(nextPath));
       router.refresh();
     } catch {
       setError("We couldn’t connect. Please try again.");
@@ -86,7 +99,13 @@ export function AuthForm({ mode }: { mode: "signup" | "login" }) {
         A Beautiful Beginning
       </p>
       <h1 className="font-editorial text-[42px] leading-[1.08] font-normal tracking-[-0.01em] text-[#500926] sm:text-[46px] lg:text-[48px]">
-        {signup ? (
+        {invitedEmail ? (
+          signup ? (
+            "Create your account to join the celebration."
+          ) : (
+            "Sign in to join the celebration."
+          )
+        ) : signup ? (
           <>
             Your big day
             <br />
@@ -101,9 +120,11 @@ export function AuthForm({ mode }: { mode: "signup" | "login" }) {
         )}
       </h1>
       <p className="mt-3 pt-1 text-sm leading-relaxed text-[#635559]">
-        {signup
-          ? "Create your Make My Marriage account. Bring your people, plans and celebrations together."
-          : "Sign in to your Make My Marriage account. We’re happy to see you again."}
+        {invitedEmail
+          ? "Use the email address your invitation was sent to. You’ll return to your invitation after signing in or creating your account."
+          : signup
+            ? "Create your Make My Marriage account. Bring your people, plans and celebrations together."
+            : "Sign in to your Make My Marriage account. We’re happy to see you again."}
       </p>
       <form
         onSubmit={submit}
@@ -141,6 +162,8 @@ export function AuthForm({ mode }: { mode: "signup" | "login" }) {
             placeholder="name@domain.com"
             required
             maxLength={254}
+            defaultValue={invitedEmail}
+            readOnly={Boolean(invitedEmail)}
             className={inputClass}
             disabled={pending}
           />
@@ -202,7 +225,9 @@ export function AuthForm({ mode }: { mode: "signup" | "login" }) {
       <p className="mt-8 text-center text-[13px] text-[#635559]">
         {signup ? "Already have an account?" : "New to Make My Marriage?"}{" "}
         <Link
-          href={signup ? "/login" : "/signup"}
+          href={tabPath(
+            `${signup ? "/login" : "/signup"}${switchParams.size ? `?${switchParams}` : ""}`,
+          )}
           className="font-medium text-[#500926] underline underline-offset-4 hover:text-[#6d213c]"
         >
           {signup ? "Sign in" : "Create an account"}

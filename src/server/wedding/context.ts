@@ -1,15 +1,24 @@
 import "server-only";
-import { findSessionUser, SESSION_COOKIE } from "@/server/auth/sessions";
+import {
+  findSessionUser,
+  cookieForTab,
+  requestTabId,
+} from "@/server/auth/sessions";
 import { getMembershipContext } from "@/modules/wedding/use-cases";
 import { WeddingError } from "@/modules/wedding/errors";
 
 /** Resolves the signed-in user and their wedding membership. Never trusts a client weddingId. */
+type SessionRequest = {
+  cookies: { get(name: string): { value: string } | undefined };
+  headers: { get(name: string): string | null };
+};
+
 export async function requireWeddingContext(
-  request: { cookies: { get(name: string): { value: string } | undefined } },
+  request: SessionRequest,
   options?: { requireRole?: "ADMIN" },
 ) {
   const user = await findSessionUser(
-    request.cookies.get(SESSION_COOKIE)?.value,
+    request.cookies.get(cookieForTab(requestTabId(request)))?.value,
   );
   if (!user) throw new WeddingError("UNAUTHENTICATED", "Please sign in.", 401);
   const { membership, wedding } = await getMembershipContext(user.id);
@@ -20,11 +29,9 @@ export async function requireWeddingContext(
   return { user, membership, wedding };
 }
 
-export async function requireUser(request: {
-  cookies: { get(name: string): { value: string } | undefined };
-}) {
+export async function requireUser(request: SessionRequest) {
   const user = await findSessionUser(
-    request.cookies.get(SESSION_COOKIE)?.value,
+    request.cookies.get(cookieForTab(requestTabId(request)))?.value,
   );
   if (!user) throw new WeddingError("UNAUTHENTICATED", "Please sign in.", 401);
   return user;

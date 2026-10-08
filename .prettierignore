@@ -1,6 +1,8 @@
 .next/
 coverage/
 node_modules/
+.augment/
+.tmp-manual/
 
 # Preserve source-document formatting.
 docs/API_DESIGN.md

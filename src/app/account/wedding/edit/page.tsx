@@ -12,12 +12,22 @@ export const dynamic = "force-dynamic";
 
 export const metadata = { title: "Edit wedding details — Make My Marriage" };
 
-export default async function EditWeddingPage() {
+export default async function EditWeddingPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
   await connection();
-  const user = await currentUser();
-  if (!user) redirect("/login");
+  const { tab } = await searchParams;
+  if (!tab) return null;
+  const user = await currentUser(tab);
+  if (!user)
+    redirect(
+      `/login?next=/account/wedding/edit${tab ? `&tab=${encodeURIComponent(tab)}` : ""}`,
+    );
   const { wedding, membership } = await getMembershipContext(user.id);
-  if (!wedding) redirect("/account");
+  if (!wedding)
+    redirect(`/account${tab ? `?tab=${encodeURIComponent(tab)}` : ""}`);
   const details = toWeddingDto(wedding);
   return (
     <WorkspaceChrome

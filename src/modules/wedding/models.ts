@@ -58,6 +58,34 @@ const weddingMembershipSchema = new Schema(
 weddingMembershipSchema.index({ weddingId: 1, userId: 1 }, { unique: true });
 weddingMembershipSchema.index({ weddingId: 1, role: 1 });
 
+const weddingMemberInvitationSchema = new Schema(
+  {
+    weddingId: { type: Schema.Types.ObjectId, required: true },
+    email: { type: String, required: true },
+    emailNormalized: { type: String, required: true },
+    role: { type: String, enum: ["ADMIN", "MANAGER"], required: true },
+    tokenHash: { type: String, required: true, unique: true },
+    status: {
+      type: String,
+      enum: ["PENDING", "ACCEPTED", "REVOKED"],
+      required: true,
+      default: "PENDING",
+    },
+    invitedByUserId: { type: Schema.Types.ObjectId, required: true },
+    acceptedByUserId: { type: Schema.Types.ObjectId },
+    expiresAt: { type: Date, required: true },
+    acceptedAt: { type: Date },
+  },
+  { timestamps: true, collection: "wedding_member_invitations" },
+);
+weddingMemberInvitationSchema.index({ weddingId: 1, status: 1 });
+weddingMemberInvitationSchema.index({ emailNormalized: 1 });
+weddingMemberInvitationSchema.index({ expiresAt: 1 });
+weddingMemberInvitationSchema.index(
+  { weddingId: 1, emailNormalized: 1 },
+  { unique: true, partialFilterExpression: { status: "PENDING" } },
+);
+
 export const Wedding =
   (mongoose.models.Wedding as Model<InferSchemaType<typeof weddingSchema>>) ||
   mongoose.model("Wedding", weddingSchema);
@@ -65,3 +93,8 @@ export const WeddingMembership =
   (mongoose.models.WeddingMembership as Model<
     InferSchemaType<typeof weddingMembershipSchema>
   >) || mongoose.model("WeddingMembership", weddingMembershipSchema);
+export const WeddingMemberInvitation =
+  (mongoose.models.WeddingMemberInvitation as Model<
+    InferSchemaType<typeof weddingMemberInvitationSchema>
+  >) ||
+  mongoose.model("WeddingMemberInvitation", weddingMemberInvitationSchema);

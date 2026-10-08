@@ -63,3 +63,8 @@ export const updateWeddingSchema = z
 export const updateMemberRoleSchema = z.object({
   role: z.enum(["ADMIN", "MANAGER"]),
 });
+
+export const inviteMemberSchema = z.object({
+  email: z.string().trim().max(254).email("Enter a valid email address."),
+  role: z.enum(["ADMIN", "MANAGER"]),
+});

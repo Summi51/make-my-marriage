@@ -16,7 +16,7 @@ import { POST as login } from "@/app/api/auth/login/route";
 import { POST as logout } from "@/app/api/auth/logout/route";
 import { GET as me } from "@/app/api/auth/me/route";
 import { User, Session } from "./models";
-import { tokenHash } from "@/server/auth/sessions";
+import { tokenHash, sessionCookieName } from "@/server/auth/sessions";
 import { consumeLimit } from "@/server/auth/rate-limit";
 
 const account = {
@@ -116,6 +116,34 @@ describe("authentication API", () => {
     ]);
     expect(responses.map((r) => r.status).sort()).toEqual([201, 409]);
     expect(await User.countDocuments()).toBe(1);
+  });
+
+  it("does not replace an active account with a stale login or signup submission", async () => {
+    const first = await signup(request("signup", account));
+    const cookie = cookieOf(first);
+    const other = { ...account, name: "Aman", email: "aman@example.com" };
+    await signup(request("signup", other));
+    for (const response of [
+      await login(request("login", other, cookie)),
+      await signup(
+        request("signup", { ...other, email: "third@example.com" }, cookie),
+      ),
+    ]) {
+      expect(response.status).toBe(409);
+      expect(response.headers.get("set-cookie")).toBeNull();
+      expect((await response.json()).error.code).toBe("ALREADY_SIGNED_IN");
+    }
+    expect(
+      (await (await me(request("me", undefined, cookie))).json()).data.user
+        .email,
+    ).toBe("saman@example.com");
+  });
+
+  it("uses distinct local-development cookie names for separate ports", () => {
+    expect(sessionCookieName("http://localhost:3001")).not.toBe(
+      sessionCookieName("http://localhost:3000"),
+    );
+    expect(sessionCookieName("https://example.com")).toBe("mmm_session");
   });
 
   it("uses the same failure for absent accounts and incorrect passwords", async () => {

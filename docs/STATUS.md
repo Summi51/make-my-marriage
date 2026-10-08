@@ -6,7 +6,7 @@ Update this file when a major feature is completed. Do not log small fixes, copy
 
 ## Current state
 
-Foundation, the public homepage, database infrastructure, account authentication, and wedding tenancy are built. Wedding creation, the wedding home, and editing wedding details are on screen. Member management screens and external integrations have not started.
+Foundation, the public homepage, database infrastructure, account authentication, wedding tenancy, and wedding member invitations are built. Wedding creation, the wedding home, editing wedding details, and member invitation management are on screen.
 
 ## Completed
 
@@ -35,7 +35,7 @@ Foundation, the public homepage, database infrastructure, account authentication
 - Signup and sign-in screens matching the homepage, linked from its planning and sign-in actions.
 - Signup, login, logout and current-user API routes with MongoDB-backed sessions, Argon2id password hashing, origin checks and database rate limits.
 - Protected account confirmation screen and persistent sign-in across refreshes.
-- Signed-in visits to the login and signup screens redirect to the account screen. Signing out also moves other open account tabs to sign-in.
+- Signed-in visits to the login and signup screens redirect to the account screen. Each browser tab uses its own session; signing out of one tab leaves other tabs and their accounts untouched.
 - API integration tests and a Playwright browser journey using isolated MongoDB.
 - Reviewed and verified in Chrome: signup, logout, sign-in, validation, duplicate email, and the session and password fixes above.
 
@@ -52,7 +52,7 @@ Foundation, the public homepage, database infrastructure, account authentication
 - After sign-in, a person with no wedding sees the wedding setup screen. Creating a wedding makes them its Admin and shows the wedding home.
 - The wedding home shows the couple, date, days remaining, location, time zone, title, and the wedding address. The workspace header shows the signed-in name and Admin or Manager role. The logo returns to the public homepage.
 - Reviewed and verified in Chrome: signup, logout, sign-in, wedding validation, bride and groom creation, refresh, and return after signing in again.
-- Wedding member screens are not built yet. Events, guests, and invitations are not shown as working actions.
+- Events, guests, and guest invitations are not shown as working actions.
 
 ### Edit wedding details
 
@@ -66,14 +66,22 @@ Foundation, the public homepage, database infrastructure, account authentication
 - A signed-out visit keeps Sign In and Start Planning.
 - A signed-in visit with no wedding shows Continue setup and opens wedding setup.
 - A signed-in visit with a wedding shows Go to your wedding and opens the overview.
-- Signing in, creating a wedding, or signing out in another tab updates the header, mobile menu, hero, and closing planning buttons.
+- The header, mobile menu, hero, and closing planning buttons follow the session in this tab. Another tab can stay signed in as a different person.
+
+### Wedding member invitations
+
+- Admins can view wedding members, invite an Admin or Manager by email, see pending invitations, and revoke a pending invitation. Managers receive the approved forbidden state.
+- Secure 14-day invitation links store only an HMAC hash. Email delivery uses Volanea and removes the pending record if delivery fails so the Admin can retry.
+- Public invitation acceptance covers signed-out, ready, success, wrong-email, existing-wedding, expired, revoked, already-accepted, and retry states. A new guest is sent to signup; a registered guest is sent to sign-in. Both open with the invited email filled in and return to the invitation.
+- Accepting an invitation creates the wedding membership and marks the invitation accepted in one transaction.
+- Admins can change Admin/Manager roles, remove another member or leave with confirmation. The final Admin cannot leave, be removed or be demoted. The recipient's workspace refreshes membership on return to the window; removed members see wedding setup.
+- Invitation links open in a new tab session without switching another tab's account. Browser regressions cover Admin and Manager acceptance, role changes, removal, and two different accounts in tabs of one browser context.
 
 ## Not started
 
-- Password recovery and email delivery.
-- Wedding member management screens.
+- Password recovery.
 - Dashboard, events, tasks, guests, invitations, expenses, vendors, website, gallery and livestream.
 
 ## Next
 
-Wedding member invitations, once that Stitch screen is approved. An already open account page still needs a refresh after another tab signs out.
+Dashboard foundation and the next approved product feature.

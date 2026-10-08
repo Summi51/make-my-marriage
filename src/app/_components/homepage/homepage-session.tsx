@@ -12,6 +12,7 @@ import {
   sessionFromMembership,
   type HomepageSession,
 } from "./session-actions";
+import { tabFetch } from "@/lib/tab-session";
 
 const HomepageSessionContext = createContext<HomepageSession>("signed-out");
 
@@ -27,7 +28,7 @@ export function HomepageSessionProvider({
     let ignore = false;
     async function refresh() {
       try {
-        const response = await fetch("/api/auth/me", {
+        const response = await tabFetch("/api/auth/me", {
           cache: "no-store",
           credentials: "same-origin",
         });

@@ -1,29 +1,18 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { AUTH_CHANNEL } from "../homepage/session-actions";
+import { tabFetch, tabPath } from "@/lib/tab-session";
 
 export function LogoutButton() {
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
-  useEffect(() => {
-    let channel: BroadcastChannel | undefined;
-    try {
-      channel = new BroadcastChannel(AUTH_CHANNEL);
-      channel.onmessage = (event: MessageEvent<string>) => {
-        if (event.data === "logout") router.replace("/login");
-      };
-    } catch {
-      return;
-    }
-    return () => channel?.close();
-  }, [router]);
   async function logout() {
     setPending(true);
     setError("");
     try {
-      const response = await fetch("/api/auth/logout", {
+      const response = await tabFetch("/api/auth/logout", {
         method: "POST",
         credentials: "same-origin",
       });
@@ -35,7 +24,7 @@ export function LogoutButton() {
       } catch {
         // Older browsers still sign out in this tab.
       }
-      router.replace("/login");
+      router.replace(tabPath("/login"));
       router.refresh();
     } catch {
       setError("Couldn’t sign out. Please try again.");
@@ -48,9 +37,25 @@ export function LogoutButton() {
       <button
         onClick={logout}
         disabled={pending}
-        className="text-[13px] font-medium text-[#635559] underline-offset-4 hover:text-[#6d213c] hover:underline disabled:opacity-60"
+        className="flex items-center space-x-1 font-medium text-[#71717a] transition hover:text-[#6d213c] disabled:opacity-60"
+        type="button"
       >
-        {pending ? "Signing out…" : "Sign out"}
+        <span className="text-xs">{pending ? "Signing out…" : "Sign out"}</span>
+        {!pending && (
+          <svg
+            className="ml-0.5 h-3.5 w-3.5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="1.8"
+            />
+          </svg>
+        )}
       </button>
       {error && (
         <p role="alert" className="text-sm text-red-800">

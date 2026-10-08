@@ -222,37 +222,52 @@ describe("wedding API", () => {
     expect(await WeddingMembership.countDocuments()).toBe(2);
   });
 
-  it("cannot remove both Admins at the same time", async () => {
-    const owner = await signUp("first-admin@example.com");
-    await createWeddingRoute(
-      weddingRequest("POST", "/api/wedding", owner, wedding),
-    );
-    const weddingId = (await Wedding.findOne())!._id;
-    const second = await User.create({
-      name: "Second Admin",
-      email: "second-admin@example.com",
-      emailNormalized: "second-admin@example.com",
-      passwordHash: "not-used",
-    });
-    const extra = await WeddingMembership.create({
-      userId: second._id,
-      weddingId,
-      role: "ADMIN",
-      joinedAt: new Date(),
-    });
-    const members = await WeddingMembership.find({ role: "ADMIN" });
-    const responses = await Promise.all(
-      members.map((member) =>
-        removeMemberRoute(
-          weddingRequest("DELETE", `/api/members/${member._id}`, owner),
-          { params: Promise.resolve({ membershipId: String(member._id) }) },
+  it.each(["remove", "demote"])(
+    "cannot %s both Admins at the same time",
+    async (operation) => {
+      const owner = await signUp("first-admin@example.com");
+      await createWeddingRoute(
+        weddingRequest("POST", "/api/wedding", owner, wedding),
+      );
+      const weddingId = (await Wedding.findOne())!._id;
+      const second = await User.create({
+        name: "Second Admin",
+        email: "second-admin@example.com",
+        emailNormalized: "second-admin@example.com",
+        passwordHash: "not-used",
+      });
+      const extra = await WeddingMembership.create({
+        userId: second._id,
+        weddingId,
+        role: "ADMIN",
+        joinedAt: new Date(),
+      });
+      const members = await WeddingMembership.find({ role: "ADMIN" });
+      const responses = await Promise.all(
+        members.map((member) =>
+          operation === "demote"
+            ? updateMemberRoute(
+                weddingRequest("PATCH", `/api/members/${member._id}`, owner, {
+                  role: "MANAGER",
+                }),
+                {
+                  params: Promise.resolve({ membershipId: String(member._id) }),
+                },
+              )
+            : removeMemberRoute(
+                weddingRequest("DELETE", `/api/members/${member._id}`, owner),
+                {
+                  params: Promise.resolve({ membershipId: String(member._id) }),
+                },
+              ),
         ),
-      ),
-    );
-    expect(responses.map((response) => response.status).sort()).toEqual([
-      204, 409,
-    ]);
-    expect(await WeddingMembership.countDocuments({ role: "ADMIN" })).toBe(1);
-    expect(String(extra._id)).toBeTruthy();
-  });
+      );
+      expect(responses.map((response) => response.status).sort()).toEqual([
+        operation === "demote" ? 200 : 204,
+        409,
+      ]);
+      expect(await WeddingMembership.countDocuments({ role: "ADMIN" })).toBe(1);
+      expect(String(extra._id)).toBeTruthy();
+    },
+  );
 });

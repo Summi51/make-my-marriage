@@ -12,8 +12,8 @@ import { WeddingHome } from "../_components/wedding/wedding-home";
 
 export const dynamic = "force-dynamic";
 
-const accountContext = cache(async () => {
-  const user = await currentUser();
+const accountContext = cache(async (tab?: string) => {
+  const user = await currentUser(tab);
   if (!user) return { user: null, wedding: null, role: undefined };
   const { wedding, membership } = await getMembershipContext(user.id);
   return {
@@ -23,8 +23,13 @@ const accountContext = cache(async () => {
   };
 });
 
-export async function generateMetadata() {
-  const { user, wedding } = await accountContext();
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
+  const { tab } = await searchParams;
+  const { user, wedding } = await accountContext(tab);
   if (!user) return { title: "Your account — Make My Marriage" };
   return {
     title: wedding
@@ -33,10 +38,19 @@ export async function generateMetadata() {
   };
 }
 
-export default async function AccountPage() {
+export default async function AccountPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
   await connection();
-  const { user, wedding, role } = await accountContext();
-  if (!user) redirect("/login");
+  const { tab } = await searchParams;
+  if (!tab) return null;
+  const { user, wedding, role } = await accountContext(tab);
+  if (!user)
+    redirect(
+      `/login?next=/account${tab ? `&tab=${encodeURIComponent(tab)}` : ""}`,
+    );
   const member = { name: user.name, role };
   if (!wedding) {
     return (
@@ -107,7 +121,7 @@ export default async function AccountPage() {
   }
   return (
     <WorkspaceChrome member={member}>
-      <WeddingHome wedding={toWeddingDto(wedding)} />
+      <WeddingHome wedding={toWeddingDto(wedding)} role={role} />
     </WorkspaceChrome>
   );
 }

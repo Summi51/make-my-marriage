@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { tabPath } from "@/lib/tab-session";
 
 function formatDate(value: string) {
   const [year, month, day] = value.split("-").map(Number);
@@ -32,6 +33,7 @@ const zones: Record<string, string> = {
 
 export function WeddingHome({
   wedding,
+  role,
 }: {
   wedding: {
     brideName: string;
@@ -43,6 +45,7 @@ export function WeddingHome({
     location: { formattedAddress?: string };
     website: { slug: string };
   };
+  role?: "ADMIN" | "MANAGER";
 }) {
   const remaining = daysUntil(wedding.weddingDate);
   const when =
@@ -106,14 +109,24 @@ export function WeddingHome({
         </span>
         . It updates when names or the date change.
       </p>
-      <Link
-        href="/account/wedding/edit"
-        className="mt-6 inline-flex h-12 items-center justify-center rounded-xl bg-[#5c1a33] px-5 text-[15px] font-medium text-white hover:bg-[#4a1529]"
-      >
-        Edit wedding
-      </Link>
+      <div className="mt-6 flex flex-wrap justify-center gap-3">
+        <Link
+          href={tabPath("/account/wedding/edit")}
+          className="inline-flex h-12 items-center justify-center rounded-xl bg-[#5c1a33] px-5 text-[15px] font-medium text-white hover:bg-[#4a1529]"
+        >
+          Edit wedding
+        </Link>
+        {role === "ADMIN" && (
+          <Link
+            href={tabPath("/account/wedding/members")}
+            className="inline-flex h-12 items-center justify-center rounded-xl border border-[#d8d0c7] bg-white px-5 text-[15px] font-medium text-[#5c1a33] hover:bg-[#f6f1ec]"
+          >
+            Wedding members
+          </Link>
+        )}
+      </div>
       <p className="mt-3 text-[13px] text-[#867276]">
-        Events, guests and inviting family come next.
+        Events and guests come next.
       </p>
     </div>
   );

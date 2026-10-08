@@ -1,4 +1,5 @@
 "use client";
+import { tabFetch, tabPath } from "@/lib/tab-session";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
@@ -70,6 +71,8 @@ export function EditForm({ wedding }: { wedding: WeddingDraft }) {
   useEffect(() => {
     const saved = readDraft(wedding);
     if (saved) {
+      // Restore a browser-only draft after hydration.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setDraft(saved);
       setDirty(true);
     }
@@ -126,7 +129,7 @@ export function EditForm({ wedding }: { wedding: WeddingDraft }) {
     setPending(true);
     setError("");
     try {
-      const response = await fetch("/api/wedding", {
+      const response = await tabFetch("/api/wedding", {
         method: "PATCH",
         credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
@@ -142,7 +145,7 @@ export function EditForm({ wedding }: { wedding: WeddingDraft }) {
       });
       const result = await response.json().catch(() => ({}));
       if (response.status === 401) {
-        router.push("/login");
+        router.push(tabPath("/login"));
         return;
       }
       if (!response.ok) {
@@ -151,7 +154,7 @@ export function EditForm({ wedding }: { wedding: WeddingDraft }) {
       }
       sessionStorage.removeItem(draftKey);
       setDirty(false);
-      router.replace("/account");
+      router.replace(tabPath("/account"));
       router.refresh();
     } catch {
       setError("We couldn't connect. Please try again.");
@@ -372,7 +375,10 @@ export function EditForm({ wedding }: { wedding: WeddingDraft }) {
           <Link
             href="/account"
             onClick={(event) => {
-              if (dirty && !window.confirm("Leave without saving these changes?")) {
+              if (
+                dirty &&
+                !window.confirm("Leave without saving these changes?")
+              ) {
                 event.preventDefault();
                 return;
               }
