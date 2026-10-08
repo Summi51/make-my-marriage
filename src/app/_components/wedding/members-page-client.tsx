@@ -216,9 +216,9 @@ export function MembersPageClient({
   }
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
+    <div className="mx-auto w-full max-w-5xl px-3.5 py-6 sm:px-6 sm:py-10 lg:px-8">
       {/* Breadcrumb */}
-      <div className="mb-5">
+      <div className="mb-4 sm:mb-5">
         <Link
           href="/account"
           className="group inline-flex items-center text-xs font-medium text-[#71717a] transition hover:text-[#6d213c]"
@@ -241,21 +241,21 @@ export function MembersPageClient({
       </div>
 
       {/* Page Header */}
-      <div className="flex flex-col justify-between gap-4 border-b border-[#ebe3da]/60 pb-8 sm:flex-row sm:items-end">
+      <div className="flex flex-col justify-between gap-4 border-b border-[#ebe3da]/60 pb-6 sm:flex-row sm:items-end sm:pb-8">
         <div>
-          <p className="mb-1.5 font-sans text-[11px] font-bold tracking-[0.16em] text-[#6d213c]/90 uppercase">
+          <p className="mb-1 font-sans text-[11px] font-bold tracking-[0.16em] text-[#6d213c]/90 uppercase sm:mb-1.5">
             Settings / Team
           </p>
-          <h1 className="font-editorial text-4xl font-medium tracking-tight text-[#231f20] sm:text-5xl">
+          <h1 className="font-editorial text-3xl font-medium tracking-tight text-[#231f20] sm:text-5xl">
             Wedding members
           </h1>
-          <p className="mt-2 text-sm font-normal text-[#71717a]">
+          <p className="mt-1.5 text-xs font-normal text-[#71717a] sm:mt-2 sm:text-sm">
             Invite the people helping you plan your celebration.
           </p>
         </div>
         <button
           onClick={() => inviteDialog.current?.showModal()}
-          className="inline-flex shrink-0 items-center justify-center self-start rounded-md bg-[#6d213c] px-4 py-2.5 text-xs font-medium text-white shadow-sm transition hover:bg-[#5b1a31] active:scale-[0.98] sm:self-auto"
+          className="inline-flex shrink-0 items-center justify-center self-start rounded-md bg-[#6d213c] px-3.5 py-2 text-xs font-medium text-white shadow-sm transition hover:bg-[#5b1a31] active:scale-[0.98] sm:self-auto sm:px-4 sm:py-2.5"
         >
           <svg
             className="mr-1.5 h-3.5 w-3.5"
@@ -383,7 +383,7 @@ export function MembersPageClient({
             className="overflow-hidden rounded-xl border border-[#e8e2da] bg-white shadow-sm"
             data-purpose="current-members-card"
           >
-            <div className="flex items-center justify-between border-b border-[#f1ede8] px-6 py-4">
+            <div className="flex items-center justify-between border-b border-[#f1ede8] px-4 py-3.5 sm:px-6 sm:py-4">
               <div>
                 <h2 className="text-sm font-semibold text-[#231f20]">
                   Current wedding members
@@ -392,13 +392,13 @@ export function MembersPageClient({
                   Active collaborators with access to planning permissions.
                 </p>
               </div>
-              <span className="inline-flex items-center rounded-full bg-[#f1ede8] px-2.5 py-1 text-[11px] font-medium text-[#71717a]">
+              <span className="inline-flex shrink-0 items-center rounded-full bg-[#f1ede8] px-2.5 py-1 text-[11px] font-medium text-[#71717a]">
                 {members.length} {members.length === 1 ? "member" : "members"}
               </span>
             </div>
             <div className="divide-y divide-[#f1ede8]">
               {members.length === 0 ? (
-                <div className="px-6 py-9 text-center">
+                <div className="px-4 py-8 text-center sm:px-6 sm:py-9">
                   <p className="text-sm font-semibold text-[#231f20]">
                     No members yet.
                   </p>
@@ -410,12 +410,12 @@ export function MembersPageClient({
                   return (
                     <div
                       key={member.membershipId}
-                      className="flex flex-wrap items-center justify-between gap-4 px-6 py-4 transition hover:bg-[#faf9f7]/70"
+                      className="flex flex-col justify-between gap-3 px-4 py-3.5 transition hover:bg-[#faf9f7]/70 sm:flex-row sm:items-center sm:gap-4 sm:px-6 sm:py-4"
                     >
-                      <div className="flex min-w-0 items-center space-x-3.5">
+                      <div className="flex min-w-0 items-center space-x-3 sm:space-x-3.5">
                         {/* Initials Avatar */}
                         <div
-                          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border font-serif text-sm font-semibold ${
+                          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border font-serif text-xs font-semibold sm:h-10 sm:w-10 sm:text-sm ${
                             isCurrentUser
                               ? "border-[#ecd3dd]/60 bg-[#f8f1f4] text-[#6d213c]"
                               : "border-[#e8e2da] bg-[#f1ede8] text-[#71717a]"
@@ -423,8 +423,8 @@ export function MembersPageClient({
                         >
                           {initial}
                         </div>
-                        <div className="min-w-0">
-                          <div className="flex items-center space-x-2">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center space-x-1.5 sm:space-x-2">
                             <span className="truncate text-sm font-semibold text-[#231f20]">
                               {member.user?.name ?? "Wedding member"}
                             </span>
@@ -439,10 +439,10 @@ export function MembersPageClient({
                           </p>
                         </div>
                       </div>
-                      <div className="flex flex-wrap items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-1.5 self-start pl-12 sm:gap-2 sm:self-auto sm:pl-0">
                         <RoleBadge role={member.role} />
                         <button
-                          className="rounded-md border border-[#e8e2da] px-3 py-2 text-xs disabled:opacity-40"
+                          className="rounded-md border border-[#e8e2da] px-2.5 py-1.5 text-xs font-medium transition hover:bg-[#faf9f7] disabled:opacity-40 sm:px-3 sm:py-2"
                           disabled={
                             member.role === "ADMIN" &&
                             members.filter((item) => item.role === "ADMIN")
@@ -453,7 +453,7 @@ export function MembersPageClient({
                           Change role
                         </button>
                         <button
-                          className="rounded-md border border-[#e8e2da] px-3 py-2 text-xs text-[#6d213c] disabled:opacity-40"
+                          className="rounded-md border border-[#e8e2da] px-2.5 py-1.5 text-xs font-medium text-[#6d213c] transition hover:bg-rose-50/60 hover:text-rose-700 disabled:opacity-40 sm:px-3 sm:py-2"
                           disabled={
                             member.role === "ADMIN" &&
                             members.filter((item) => item.role === "ADMIN")
@@ -481,7 +481,7 @@ export function MembersPageClient({
             className="overflow-hidden rounded-xl border border-[#e8e2da] bg-white shadow-sm"
             data-purpose="pending-invitations-card"
           >
-            <div className="flex items-center justify-between border-b border-[#f1ede8] px-6 py-4">
+            <div className="flex items-center justify-between border-b border-[#f1ede8] px-4 py-3.5 sm:px-6 sm:py-4">
               <div>
                 <h2 className="text-sm font-semibold text-[#231f20]">
                   Pending invitations
@@ -491,7 +491,7 @@ export function MembersPageClient({
                 </p>
               </div>
               <span
-                className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium ${
+                className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-[11px] font-medium ${
                   invitations.length > 0
                     ? "border border-amber-200/50 bg-amber-50 text-amber-700"
                     : "bg-[#f1ede8] text-[#71717a]"
@@ -501,10 +501,10 @@ export function MembersPageClient({
               </span>
             </div>
             {invitations.length === 0 ? (
-              <div className="px-6 py-12 text-center">
-                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#f1ede8] text-[#71717a]">
+              <div className="px-4 py-10 text-center sm:px-6 sm:py-12">
+                <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-[#f1ede8] text-[#71717a] sm:h-12 sm:w-12">
                   <svg
-                    className="h-6 w-6"
+                    className="h-5 w-5 sm:h-6 sm:w-6"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -536,11 +536,11 @@ export function MembersPageClient({
                 {invitations.map((invitation) => (
                   <div
                     key={invitation.id}
-                    className="flex flex-col justify-between gap-3 px-6 py-4 transition hover:bg-[#faf9f7]/70 sm:flex-row sm:items-center"
+                    className="flex flex-col justify-between gap-3 px-4 py-3.5 transition hover:bg-[#faf9f7]/70 sm:flex-row sm:items-center sm:px-6 sm:py-4"
                   >
-                    <div className="flex items-start space-x-3.5 sm:items-center">
+                    <div className="flex min-w-0 items-start space-x-3 sm:items-center sm:space-x-3.5">
                       {/* Clock / Pending indicator */}
-                      <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-amber-200 bg-amber-50/70 text-amber-600 sm:mt-0">
+                      <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-amber-200 bg-amber-50/70 text-amber-600 sm:mt-0 sm:h-10 sm:w-10">
                         <svg
                           className="h-4 w-4 text-amber-700"
                           fill="none"
@@ -555,9 +555,9 @@ export function MembersPageClient({
                           />
                         </svg>
                       </div>
-                      <div>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="font-mono text-[13px] font-medium text-[#231f20]">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                          <span className="font-mono text-[13px] font-medium break-all text-[#231f20] sm:break-normal">
                             {invitation.email}
                           </span>
                           <RoleBadge role={invitation.role} />
@@ -578,10 +578,10 @@ export function MembersPageClient({
                         </p>
                       </div>
                     </div>
-                    <div className="shrink-0">
+                    <div className="shrink-0 self-start pl-12 sm:self-auto sm:pl-0">
                       <button
                         onClick={() => askToRevoke(invitation)}
-                        className="rounded-md border border-[#e8e2da] bg-white px-3 py-1.5 text-xs font-medium text-[#71717a] shadow-sm transition hover:border-rose-200 hover:bg-rose-50/60 hover:text-rose-700"
+                        className="rounded-md border border-[#e8e2da] bg-white px-2.5 py-1.5 text-xs font-medium text-[#71717a] shadow-sm transition hover:border-rose-200 hover:bg-rose-50/60 hover:text-rose-700 sm:px-3"
                       >
                         Revoke invitation
                       </button>

@@ -33,7 +33,7 @@ const zones: Record<string, string> = {
 
 export function WeddingHome({
   wedding,
-  role,
+  role: _role,
 }: {
   wedding: {
     brideName: string;
@@ -47,6 +47,7 @@ export function WeddingHome({
   };
   role?: "ADMIN" | "MANAGER";
 }) {
+  void _role;
   const remaining = daysUntil(wedding.weddingDate);
   const when =
     remaining > 1
@@ -116,7 +117,9 @@ export function WeddingHome({
         >
           Edit wedding
         </Link>
-        {role === "ADMIN" && (
+        {/* Wedding members link is accessible from the top navbar only */}
+        {/*
+        {_role === "ADMIN" && (
           <Link
             href={tabPath("/account/wedding/members")}
             className="inline-flex h-12 items-center justify-center rounded-xl border border-[#d8d0c7] bg-white px-5 text-[15px] font-medium text-[#5c1a33] hover:bg-[#f6f1ec]"
@@ -124,6 +127,7 @@ export function WeddingHome({
             Wedding members
           </Link>
         )}
+        */}
       </div>
       <p className="mt-3 text-[13px] text-[#867276]">
         Events and guests come next.

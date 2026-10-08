@@ -22,6 +22,15 @@ export async function requireSignedOut(request: NextRequest) {
     );
 }
 
+function requestOrigin(value: string | null) {
+  if (!value) return null;
+  try {
+    return new URL(value).origin;
+  } catch {
+    return null;
+  }
+}
+
 export function checkOrigin(request: NextRequest) {
   const configured = process.env.APP_ORIGIN;
   if (process.env.NODE_ENV === "production" && !configured)
@@ -34,7 +43,16 @@ export function checkOrigin(request: NextRequest) {
   } catch {
     throw new Error("APP_ORIGIN must be an absolute URL.");
   }
-  if (request.headers.get("origin") !== expected)
+  const originHeader = request.headers.get("origin");
+  const origin = requestOrigin(originHeader);
+  const expectedUrl = new URL(expected);
+  const host = request.headers.get("host")?.trim().toLowerCase();
+  const sameHost =
+    originHeader === null &&
+    expectedUrl.protocol === "https:" &&
+    host === expectedUrl.host &&
+    request.headers.get("x-forwarded-proto") === "https";
+  if (origin !== expected && !sameHost)
     throw new AuthError("FORBIDDEN", "This request is not allowed.", 403);
 }
 

@@ -18,6 +18,7 @@ import { GET as me } from "@/app/api/auth/me/route";
 import { User, Session } from "./models";
 import { tokenHash, sessionCookieName } from "@/server/auth/sessions";
 import { consumeLimit } from "@/server/auth/rate-limit";
+import { checkOrigin } from "@/server/auth/http";
 
 const account = {
   name: "Saman",
@@ -146,6 +147,37 @@ describe("authentication API", () => {
     expect(sessionCookieName("https://example.com")).toBe("mmm_session");
   });
 
+  it("only accepts an absent Origin from the configured HTTPS proxy", () => {
+    vi.stubEnv("APP_ORIGIN", "https://wedding.example");
+    try {
+      const proxyRequest = (origin?: string, host = "wedding.example") =>
+        new NextRequest("https://wedding.example/api/auth/login", {
+          method: "POST",
+          headers: {
+            host,
+            "x-forwarded-proto": "https",
+            ...(origin === undefined ? {} : { origin }),
+          },
+        });
+      expect(() => checkOrigin(proxyRequest())).not.toThrow();
+      expect(() =>
+        checkOrigin(proxyRequest("https://wedding.example")),
+      ).not.toThrow();
+      for (const value of [
+        "null",
+        "not-an-origin",
+        "https://foreign.example",
+      ]) {
+        expect(() => checkOrigin(proxyRequest(value))).toThrow();
+      }
+      expect(() =>
+        checkOrigin(proxyRequest(undefined, "foreign.example")),
+      ).toThrow();
+    } finally {
+      vi.stubEnv("APP_ORIGIN", "http://localhost:3000");
+    }
+  });
+
   it("uses the same failure for absent accounts and incorrect passwords", async () => {
     await signup(request("signup", account));
     const wrong = await login(
@@ -184,6 +216,33 @@ describe("authentication API", () => {
         )
       ).status,
     ).toBe(403);
+    const missingOrigin = new NextRequest(
+      "http://localhost:3000/api/auth/signup",
+      {
+        method: "POST",
+        headers: {
+          host: "localhost:3000",
+          "x-forwarded-proto": "https",
+          "content-type": "application/json",
+        },
+        body: JSON.stringify(account),
+      },
+    );
+    expect((await signup(missingOrigin)).status).toBe(403);
+    const spoofedHost = new NextRequest(
+      "http://localhost:3000/api/auth/signup",
+      {
+        method: "POST",
+        headers: {
+          origin: "https://foreign.example",
+          host: "localhost:3000",
+          "x-forwarded-proto": "https",
+          "content-type": "application/json",
+        },
+        body: JSON.stringify(account),
+      },
+    );
+    expect((await signup(spoofedHost)).status).toBe(403);
     const shortPassword = await signup(
       request("signup", { ...account, password: "short" }),
     );
