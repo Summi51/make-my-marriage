@@ -126,8 +126,13 @@ export async function sendMemberInvitationEmail(input: InvitationEmail) {
     throw new InvitationEmailError(
       "Invitation email delivery is not configured.",
     );
-  const namedSender = from.match(/^\s*(.*?)\s*<([^<>]+)>\s*$/);
-  const fromEmail = namedSender ? namedSender[2].trim() : from.trim();
+  // Console environment values can retain the quotes used in .env examples.
+  const sender = from
+    .trim()
+    .replace(/^(["'])(.*)\1$/, "$2")
+    .trim();
+  const namedSender = sender.match(/^\s*(.*?)\s*<([^<>]+)>\s*$/);
+  const fromEmail = namedSender ? namedSender[2].trim() : sender;
   const fromName = namedSender?.[1].trim();
   const { text, html } = invitationContent(input);
   const response = await fetch("https://api.volanea.com/v1/send", {

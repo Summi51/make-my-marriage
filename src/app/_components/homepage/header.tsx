@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRef, useState } from "react";
 import { AvailabilityButton } from "./homepage-actions";
 import { useHomepageSession } from "./homepage-session";
@@ -27,10 +28,14 @@ export function Header() {
       }}
     >
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6">
-        <a
-          href="#top"
+        <Link
+          href={session === "signed-out" ? "#top" : actions.primary.href}
           className="flex shrink-0 items-center gap-2 sm:gap-3"
-          aria-label="Make My Marriage home"
+          aria-label={
+            session === "signed-out"
+              ? "Make My Marriage home"
+              : actions.primary.label
+          }
         >
           <svg
             aria-hidden="true"
@@ -65,7 +70,7 @@ export function Header() {
               Wedding Workspace
             </span>
           </span>
-        </a>
+        </Link>
         <nav
           aria-label="Main navigation"
           className="hidden items-center gap-9 text-[15px] font-medium text-gray-600 lg:flex"
@@ -76,7 +81,7 @@ export function Header() {
             </a>
           ))}
         </nav>
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-2.5 sm:gap-6">
           {actions.secondary ? (
             <AvailabilityButton
               href={actions.secondary.href}
@@ -87,7 +92,7 @@ export function Header() {
           ) : null}
           <AvailabilityButton
             href={actions.primary.href}
-            className="bg-brand-wine hover:bg-brand-wine-dark shadow-brand-wine/20 hidden rounded-xl px-5 py-2.5 text-[14.5px] font-medium text-white shadow-sm transition-colors sm:block"
+            className="bg-brand-wine hover:bg-brand-wine-dark shadow-brand-wine/20 inline-flex items-center rounded-xl px-3 py-2 text-xs font-semibold text-white shadow-xs transition-colors sm:px-5 sm:py-2.5 sm:text-[14.5px] sm:font-medium"
           >
             {actions.primary.label}
           </AvailabilityButton>

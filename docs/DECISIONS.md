@@ -24,6 +24,7 @@
 - Use atomic MongoDB fixed-window counters in the infrastructure collection `auth_rate_limits`, with hashed keys and TTL cleanup. Each 15-minute window allows five signup attempts or ten login attempts per normalized email. Shared application limits are 50 signup attempts and 200 login attempts per window, including successful attempts. This conservative initial traffic budget should be revisited before a larger launch; client-provided forwarding headers are not trusted. No Redis/provider integration is needed for this increment.
 - Playwright covers the first account browser journey against a production build and an isolated MongoDB server. Run `npm run test:e2e` after installing Chromium with `npx playwright install chromium`.
 - A new account has no membership, so signup returns `hasWedding: false` and `/api/auth/me` returns null membership and wedding. Login and `/api/auth/me` return the real membership after a wedding is created. `/account` is the post-login destination. Password recovery is deferred to its own increment; V1 still does not require email verification.
+- Wedding edits preserve the existing `website.slug`, as required by `SYSTEM_DESIGN.md`, `DATABASE_DESIGN.md` and `API_DESIGN.md`. The earlier implementation and progress log described regenerating the address on name/date changes; that conflicted with these source documents and is superseded by the stable-address behavior.
 
 ## Wedding member invitation milestone decisions
 
@@ -33,6 +34,11 @@
 - Wedding member invitations expire after 14 days. Tokens contain 32 random bytes and only an HMAC-SHA-256 hash is stored; `MEMBER_INVITATION_SECRET` is a separate secret of at least 32 characters.
 - For this milestone, invitation email is delivered through the Volanea HTTP API using `VOLANEA_API_KEY` and `VOLANEA_FROM`, following the product owner's provider change. This supersedes the older Resend references in `SYSTEM_DESIGN.md` and `API_DESIGN.md` for wedding member invitations only; email delivery for future milestones remains to be decided when those milestones begin. A live key and a verified sending domain are required for actual delivery. If delivery fails or the provider reports test mode, the pending record is removed so the Admin can retry without encountering a false duplicate.
 - An expired pending invitation may be replaced by a new invitation to the same wedding and email. Replacing it removes the expired record, so the older link becomes invalid after the replacement is sent.
+
+## Wedding events and tasks milestone decisions
+
+- Workspace navigation and dashboard cards render sections whose routes do not exist yet (guests, invitations & RSVP, expenses, vendors, website, gallery, guest QR, livestream) as non-clickable "Soon" items instead of links, so the design preview never sends a member to a 404. Each entry becomes a real link when its module ships.
+- Task due dates are date-only. `POST`/`PATCH /api/tasks` stores the UTC instant of midnight in `Wedding.timeZone`, as `API_DESIGN.md` requires, so the saved day matches the day the member chose in every supported time zone. Storing plain UTC midnight shifted the day backwards in time zones behind UTC and moved it again on each edit.
 
 ## Remaining unresolved decisions
 

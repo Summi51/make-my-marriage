@@ -4,7 +4,15 @@ import { useState } from "react";
 import { AUTH_CHANNEL } from "../homepage/session-actions";
 import { tabFetch, tabPath } from "@/lib/tab-session";
 
-export function LogoutButton() {
+export function LogoutButton({
+  className = "flex items-center space-x-1 font-medium text-[#71717a] transition hover:text-[#6d213c] disabled:opacity-60",
+  hideIcon = false,
+  label,
+}: {
+  className?: string;
+  hideIcon?: boolean;
+  label?: string;
+} = {}) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
@@ -37,11 +45,13 @@ export function LogoutButton() {
       <button
         onClick={logout}
         disabled={pending}
-        className="flex items-center space-x-1 font-medium text-[#71717a] transition hover:text-[#6d213c] disabled:opacity-60"
+        className={className}
         type="button"
       >
-        <span className="text-xs">{pending ? "Signing out…" : "Sign out"}</span>
-        {!pending && (
+        <span className="text-xs">
+          {pending ? "Signing out…" : label || "Sign out"}
+        </span>
+        {!pending && !hideIcon && (
           <svg
             className="ml-0.5 h-3.5 w-3.5"
             fill="none"

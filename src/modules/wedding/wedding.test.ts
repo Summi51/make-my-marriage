@@ -92,7 +92,7 @@ describe("wedding API", () => {
     return cookieOf(response);
   }
 
-  it("creates one Admin wedding and updates the slug when names change", async () => {
+  it("creates one Admin wedding and preserves its address when names and date change", async () => {
     const cookie = await signUp("ayesha@example.com");
     const created = await createWeddingRoute(
       weddingRequest("POST", "/api/wedding", cookie, {
@@ -118,6 +118,7 @@ describe("wedding API", () => {
       weddingRequest("PATCH", "/api/wedding", cookie, {
         brideName: "Simran",
         groomName: "Aman",
+        weddingDate: "2028-01-10",
         location: { city: "Karachi" },
       }),
     );
@@ -125,7 +126,8 @@ describe("wedding API", () => {
     const saved = await Wedding.findOne().lean();
     expect(saved?.brideName).toBe("Simran");
     expect(saved?.groomName).toBe("Aman");
-    expect(saved?.website?.slug).toBe("simran-aman-18122027");
+    expect(saved?.weddingDate).toBe("2028-01-10");
+    expect(saved?.website?.slug).toBe(body.data.website.slug);
     expect(saved?.location?.formattedAddress).toBe("Karachi, Pakistan");
     expect(saved?.location?.city).toBe("Karachi");
 
@@ -141,7 +143,7 @@ describe("wedding API", () => {
     expect(afterClear?.title).toBeNull();
     expect(afterClear?.description).toBeNull();
     expect(afterClear?.location?.formattedAddress).toBeNull();
-    expect(afterClear?.website?.slug).toBe("simran-aman-18122027");
+    expect(afterClear?.website?.slug).toBe(body.data.website.slug);
     expect(afterClear?.gallery?.tokenHash).toBe(saved?.gallery?.tokenHash);
   });
 

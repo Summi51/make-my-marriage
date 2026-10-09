@@ -27,7 +27,11 @@ export default async function MembersPage({
     redirect(`/account${tab ? `?tab=${encodeURIComponent(tab)}` : ""}`);
   const member = { name: user.name, role: membership.role };
   return (
-    <WorkspaceChrome member={member}>
+    <WorkspaceChrome
+      member={member}
+      weddingTitle={`${wedding.brideName} & ${wedding.groomName}`}
+      weddingDate={wedding.weddingDate}
+    >
       {membership.role === "ADMIN" ? (
         <MembersPageClient currentUserId={user.id} />
       ) : (

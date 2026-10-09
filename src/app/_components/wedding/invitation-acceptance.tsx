@@ -122,7 +122,7 @@ export function InvitationAcceptance({ token }: { token: string }) {
         title="You’re part of the celebration"
         body="Invitation accepted. Welcome to the wedding workspace."
         action={
-          <Link href={tabPath("/account")} className={primary}>
+          <Link href="/account" className={primary}>
             Go to your wedding
           </Link>
         }
@@ -185,7 +185,7 @@ export function InvitationAcceptance({ token }: { token: string }) {
         body="One account can belong to one wedding workspace."
         action={
           <div className="flex flex-col justify-center gap-3 sm:flex-row">
-            <Link href={tabPath("/account")} className={secondary}>
+            <Link href="/account" className={secondary}>
               Go to your wedding
             </Link>
             <button onClick={() => void signOut()} className={primary}>
@@ -212,7 +212,7 @@ export function InvitationAcceptance({ token }: { token: string }) {
         body="If it was accepted by you, open your wedding workspace."
         action={
           viewer?.membership && viewer.wedding ? (
-            <Link href={tabPath("/account")} className={primary}>
+            <Link href="/account" className={primary}>
               Go to wedding
             </Link>
           ) : undefined
@@ -252,7 +252,7 @@ export function InvitationAcceptance({ token }: { token: string }) {
           ) : null
         }
         action={
-          <Link href={tabPath(entryHref)} className={`${primary} w-full`}>
+          <Link href={entryHref} className={`${primary} w-full`}>
             {registered ? "Sign in" : "Create account"}
           </Link>
         }

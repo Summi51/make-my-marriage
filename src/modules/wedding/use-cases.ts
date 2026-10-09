@@ -163,24 +163,6 @@ export async function updateWedding(
       "Provide at least one field to update.",
       400,
     );
-  if (
-    input.brideName !== undefined ||
-    input.groomName !== undefined ||
-    input.weddingDate !== undefined
-  ) {
-    const current = await Wedding.findOne({
-      _id: weddingId,
-      deletedAt: null,
-    }).lean();
-    if (!current)
-      throw new WeddingError("NOT_FOUND", "Wedding not found.", 404);
-    update["website.slug"] = await generateUniqueSlug(
-      input.brideName ?? current.brideName,
-      input.groomName ?? current.groomName,
-      input.weddingDate ?? current.weddingDate,
-      weddingId,
-    );
-  }
   const wedding = await Wedding.findOneAndUpdate(
     { _id: weddingId, deletedAt: null },
     { $set: update },

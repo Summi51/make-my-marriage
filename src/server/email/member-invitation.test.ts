@@ -99,6 +99,23 @@ describe("Volanea member invitation delivery", () => {
     expect(body.html).not.toContain("/signup?");
   });
 
+  it("accepts a named sender quoted in a hosting environment variable", async () => {
+    vi.stubEnv("VOLANEA_FROM", '"Make My Marriage <invites@example.com>"');
+    const fetchMock = vi.fn(async () =>
+      Response.json({ data: { messages: [{ id: "quoted-sender" }] } }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    await sendMemberInvitationEmail(input);
+    const [, options] = fetchMock.mock.calls[0] as unknown as [
+      string,
+      RequestInit,
+    ];
+    expect(JSON.parse(String(options.body))).toMatchObject({
+      from: "invites@example.com",
+      fromName: "Make My Marriage",
+    });
+  });
+
   it("renders the Admin role and escapes names in HTML", async () => {
     const fetchMock = vi.fn(async () =>
       Response.json({

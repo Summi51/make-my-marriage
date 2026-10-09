@@ -12,3 +12,6 @@
 .vscode/
 *.tsbuildinfo
 next-env.d.ts
+.augment/
+.tmp-manual/
+Untitled-1

@@ -861,6 +861,8 @@ function InviteDialog({
         if (result.error?.code === "INVITATION_PENDING") await onConflict();
         const messages: Record<string, string> = {
           ALREADY_MEMBER: "This person is already a member of your wedding.",
+          ALREADY_HAS_WEDDING:
+            "This person already belongs to another wedding. They must leave that wedding or use a different account before joining yours.",
           INVITATION_PENDING: "An invitation to this email is already waiting.",
           VALIDATION_ERROR: "Enter a valid email address.",
           EMAIL_DELIVERY_FAILED:

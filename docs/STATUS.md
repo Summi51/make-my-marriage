@@ -6,7 +6,7 @@ Update this file when a major feature is completed. Do not log small fixes, copy
 
 ## Current state
 
-Foundation, the public homepage, database infrastructure, account authentication, wedding tenancy, and wedding member invitations are built. Wedding creation, the wedding home, editing wedding details, and member invitation management are on screen.
+Foundation, the public homepage, database infrastructure, account authentication, wedding tenancy, wedding member invitations, wedding events and wedding tasks are built. Wedding creation, the wedding home, editing wedding details, member invitation management, the event itinerary and task planning are on screen.
 
 ## Completed
 
@@ -77,11 +77,59 @@ Foundation, the public homepage, database infrastructure, account authentication
 - Admins can change Admin/Manager roles, remove another member or leave with confirmation. The final Admin cannot leave, be removed or be demoted. The recipient's workspace refreshes membership on return to the window; removed members see wedding setup.
 - Invitation links open in a new tab session without switching another tab's account. Browser regressions cover Admin and Manager acceptance, role changes, removal, and two different accounts in tabs of one browser context.
 
+### Workspace layout and dashboard preview
+
+- Workspace layout matching the reference Stitch atelier design with full sidebar navigation: Planning (Events, Tasks), Guests (Guests, RSVP), Finance & Vendors (Expenses, Vendors), Website & Media (Website, Gallery, QR, Livestream), Settings (Details, Members), and dynamic user footer with sign out.
+- Header bar with breadcrumbs (`Workspace / Dashboard`), real-time countdown badge, `Edit wedding details` button, user role indicator, and sign-out action.
+- Dynamic Hero overview with couple names, wedding date, venue, time zone, co-planning team avatars, and member management link.
+- 5 high-level metric cards (`Wedding events`, `Tasks completed`, `Invited guests`, `RSVP responses`, `Total expenses`).
+- Muslim celebrations schedule preview (Mehndi & Dholki, Sangeet & Qawwali Night, Nikah Ceremony & Feast [Main Event], Walima Reception).
+- Preparation tasks preview with assignees and status pills (`Done`, `Due in 3 days`, `In progress`, `Pending`).
+- RSVP donut chart with attending/declined/awaiting breakdown and legend.
+- Category-level wedding expenses breakdown with visual dots.
+- "A celebration worth remembering" card with Qur'anic ayah reflection.
+- Full-width photo highlights preview gallery with celebration badges.
+- Fully responsive across desktop (1440px) and mobile (390px) with slide-out drawer navigation.
+- Verified in Chrome across desktop and mobile viewports.
+
+### Wedding events
+
+- Event model, Zod schemas, and use-cases scoped by wedding id (`src/modules/events/`). Create, list, get, update, and archive (soft delete via `archivedAt`), matching `API_DESIGN.md`.
+- API routes: `GET/POST /api/events`, `GET/PATCH/DELETE /api/events/:eventId`.
+- Events list page grouped by day with wine/ivory styling and Cormorant Garamond headings, matching the Stitch design. Empty state with three feature tiles and a call to add the first event.
+- Add event page with three sections (Event details, Date & time, Venue & details), validation, and redirect back to the list on success.
+- Sidebar "Events" link already routed to this page.
+
+### Wedding tasks
+
+- Task model, Zod schemas, format utilities, and use-cases scoped by wedding id (`src/modules/tasks/`). Create, list, get, update, and hard delete matching `PRD.md`, `DATABASE_DESIGN.md`, and `API_DESIGN.md`.
+- Status transition logic: setting status to `COMPLETED` sets `completedAt`, moving away clears it, and metadata edits preserve completion timestamp.
+- Associations: assigned wedding members and related active wedding events are resolved safely into task DTOs.
+- Time zone aware overdue calculation comparing wedding-local due dates with current date.
+- API routes: `GET/POST /api/tasks`, `GET/PATCH/DELETE /api/tasks/:taskId`.
+- Wedding tasks list view matching Stitch screens `84070788af9d4a2997016d4ce3f1ca29` and `4d89729f9854417aa4eb8139e14f9336`:
+  - Tabs (`All Tasks`, `My Tasks`, `Completed`) with dynamic count badges and active underline indicators.
+  - Filter card with Status, Priority, Event, and Assigned member dropdowns and Clear filters action.
+  - Empty state with warm cream circular checkmark badge and "+ Add your first task" CTA.
+  - Populated task cards with high/medium/low priority badges, overdue badges, completed pills with strikethrough styling, assignee icon/label, related event icon/label, due date formatting, in-place interactive status dropdown selector, Details link, and Delete modal confirmation.
+- Add and Edit task forms matching Stitch screen `54dc98053a5a499f95be7503168c468e`:
+  - Section 1: Task details (Task title *, optional Description).
+  - Section 2: Assignment & planning (Assigned member dropdown, Related event dropdown, wedding time zone-aware Due date input, Priority dropdown, Status dropdown).
+  - Cancel and Create/Save actions with clean client redirection.
+- Task detail view (`/account/wedding/tasks/:taskId`) displaying complete task metadata, description card, edit navigation, and delete confirmation dialog.
+- 0 hydration errors across all pages, verified with Playwright end-to-end tests and full test suites passing.
+- Dashboard shows saved task progress: completed/total count and the latest saved tasks, instead of the sample task preview.
+- Unsaved add and edit task details stay in this browser tab and return after session expiry and sign-in. Cancel and a successful save clear the draft.
+- Task due dates save the wedding-local day as a UTC instant, and task updates use a compare-and-set so a concurrent edit returns `CONFLICT` instead of overwriting silently.
+- Malformed member or event ids on task requests return `VALIDATION_ERROR` (400) rather than a server error.
+- Sidebar and dashboard sections whose routes are not built yet render as non-clickable "Soon" items instead of links that would reach a 404.
+
 ## Not started
 
 - Password recovery.
-- Dashboard, events, tasks, guests, invitations, expenses, vendors, website, gallery and livestream.
+- Permanent event deletion (archiving is the only removal path).
+- Functional backing domain modules for guests, invitations, expenses, vendors, website, gallery and livestream.
 
 ## Next
 
-Dashboard foundation and the next approved product feature.
+Domain implementation for the next active workspace module (Guests & Invitations).

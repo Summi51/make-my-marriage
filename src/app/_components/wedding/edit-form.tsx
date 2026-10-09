@@ -30,23 +30,6 @@ const inputClass =
 const labelClass =
   "block text-[11px] font-semibold tracking-wide text-[#262424] uppercase";
 
-function slugifyName(name: string) {
-  return name
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
-
-function previewSlug(draft: WeddingDraft) {
-  const [year, month, day] = draft.weddingDate.split("-");
-  if (!year || !month || !day) return draft.slug;
-  const bride = slugifyName(draft.brideName);
-  const groom = slugifyName(draft.groomName);
-  if (!bride || !groom) return draft.slug;
-  return `${bride}-${groom}-${day}${month}${year}`;
-}
-
 function readDraft(wedding: WeddingDraft): WeddingDraft | null {
   const saved = sessionStorage.getItem(draftKey);
   if (!saved) return null;
@@ -63,7 +46,6 @@ export function EditForm({ wedding }: { wedding: WeddingDraft }) {
   const router = useRouter();
   const [draft, setDraft] = useState(wedding);
   const [dirty, setDirty] = useState(false);
-  const [ready, setReady] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const [titleSuggested, setTitleSuggested] = useState(false);
@@ -76,7 +58,6 @@ export function EditForm({ wedding }: { wedding: WeddingDraft }) {
       setDraft(saved);
       setDirty(true);
     }
-    setReady(true);
   }, [wedding]);
 
   useEffect(() => {
@@ -188,12 +169,12 @@ export function EditForm({ wedding }: { wedding: WeddingDraft }) {
               Wedding address
             </p>
             <p className="mt-0.5 font-mono text-sm font-medium text-[#1e1a1f]">
-              {ready ? previewSlug(draft) : wedding.slug}
+              {wedding.slug}
             </p>
           </div>
         </div>
         <p className="max-w-[220px] text-[12px] leading-5 text-[#867276] sm:text-right">
-          Updates when you save a new name or date.
+          Your wedding address stays the same when you edit these details.
         </p>
       </div>
       {/* Bride & Groom names */}

@@ -225,9 +225,7 @@ export function AuthForm({
       <p className="mt-8 text-center text-[13px] text-[#635559]">
         {signup ? "Already have an account?" : "New to Make My Marriage?"}{" "}
         <Link
-          href={tabPath(
-            `${signup ? "/login" : "/signup"}${switchParams.size ? `?${switchParams}` : ""}`,
-          )}
+          href={`${signup ? "/login" : "/signup"}${switchParams.size ? `?${switchParams}` : ""}`}
           className="font-medium text-[#500926] underline underline-offset-4 hover:text-[#6d213c]"
         >
           {signup ? "Sign in" : "Create an account"}

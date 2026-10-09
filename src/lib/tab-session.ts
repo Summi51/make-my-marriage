@@ -11,10 +11,9 @@ export function currentTabId() {
   return id;
 }
 
-export function tabPath(path: string) {
-  const id = currentTabId();
+export function tabPath(path: string, id = currentTabId()) {
   if (!id || !path.startsWith("/") || path.startsWith("//")) return path;
-  const url = new URL(path, window.location.origin);
+  const url = new URL(path, "https://make-my-marriage.invalid");
   url.searchParams.set(TAB_QUERY, id);
   return `${url.pathname}${url.search}${url.hash}`;
 }

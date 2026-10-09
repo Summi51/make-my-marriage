@@ -4,8 +4,11 @@ import { connection } from "next/server";
 import { currentUser } from "@/server/auth/sessions";
 import {
   getMembershipContext,
+  listMembers,
   toWeddingDto,
 } from "@/modules/wedding/use-cases";
+import { listDashboardTasks } from "@/modules/tasks/use-cases";
+import { countActiveEvents } from "@/modules/events/use-cases";
 import { WorkspaceChrome } from "../_components/wedding/workspace-chrome";
 import { SetupForm } from "../_components/wedding/setup-form";
 import { WeddingHome } from "../_components/wedding/wedding-home";
@@ -14,12 +17,50 @@ export const dynamic = "force-dynamic";
 
 const accountContext = cache(async (tab?: string) => {
   const user = await currentUser(tab);
-  if (!user) return { user: null, wedding: null, role: undefined };
+  if (!user)
+    return {
+      user: null,
+      wedding: null,
+      role: undefined,
+      members: [],
+      eventCount: 0,
+      taskProgress: { total: 0, completed: 0, tasks: [] },
+    };
   const { wedding, membership } = await getMembershipContext(user.id);
+  let members: { name: string; role: "ADMIN" | "MANAGER" }[] = [];
+  let eventCount = 0;
+  let taskProgress: Awaited<ReturnType<typeof listDashboardTasks>> = {
+    total: 0,
+    completed: 0,
+    tasks: [],
+  };
+  if (wedding) {
+    const weddingId = wedding._id.toString();
+    try {
+      const memberList = await listMembers(weddingId);
+      members = memberList.map((m) => ({
+        name: m.user?.name ?? "Wedding member",
+        role: m.role,
+      }));
+    } catch {
+      // Fallback if listMembers fails
+    }
+    try {
+      [eventCount, taskProgress] = await Promise.all([
+        countActiveEvents(weddingId),
+        listDashboardTasks(weddingId, wedding.timeZone),
+      ]);
+    } catch {
+      // Keep zeros if planning data cannot be loaded
+    }
+  }
   return {
     user,
     wedding,
     role: membership?.role,
+    members,
+    eventCount,
+    taskProgress,
   };
 });
 
@@ -46,7 +87,8 @@ export default async function AccountPage({
   await connection();
   const { tab } = await searchParams;
   if (!tab) return null;
-  const { user, wedding, role } = await accountContext(tab);
+  const { user, wedding, role, members, eventCount, taskProgress } =
+    await accountContext(tab);
   if (!user)
     redirect(
       `/login?next=/account${tab ? `&tab=${encodeURIComponent(tab)}` : ""}`,
@@ -120,8 +162,20 @@ export default async function AccountPage({
     );
   }
   return (
-    <WorkspaceChrome member={member}>
-      <WeddingHome wedding={toWeddingDto(wedding)} role={role} />
+    <WorkspaceChrome
+      member={member}
+      weddingTitle={
+        wedding ? `${wedding.brideName} & ${wedding.groomName}` : undefined
+      }
+      weddingDate={wedding?.weddingDate}
+    >
+      <WeddingHome
+        wedding={toWeddingDto(wedding)}
+        role={role}
+        members={members}
+        eventCount={eventCount}
+        taskProgress={taskProgress}
+      />
     </WorkspaceChrome>
   );
 }

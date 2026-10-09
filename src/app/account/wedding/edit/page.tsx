@@ -35,6 +35,8 @@ export default async function EditWeddingPage({
         name: user.name,
         role: membership?.role,
       }}
+      weddingTitle={`${wedding.brideName} & ${wedding.groomName}`}
+      weddingDate={wedding.weddingDate}
     >
       <div className="mx-auto grid w-full max-w-6xl items-start gap-6 px-5 py-8 sm:px-8 lg:grid-cols-[minmax(0,1.7fr)_minmax(280px,1fr)] lg:py-10">
         {/* ── Left: Form card ── */}
