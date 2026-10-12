@@ -2,11 +2,19 @@
 import { useEffect } from "react";
 import { currentTabId, TAB_QUERY } from "@/lib/tab-session";
 
+// Public routes that are never tab-scoped. Rewriting their URL would add a
+// stray ?tab= to a shareable link and force a second full document load, which
+// shows up as the page rendering twice.
+const TAB_FREE_PREFIXES = ["/invite/"];
+
 export function TabSessionBootstrap() {
   useEffect(() => {
     const id = currentTabId();
     const url = new URL(window.location.href);
-    if (id && url.searchParams.get(TAB_QUERY) !== id) {
+    const tabFree = TAB_FREE_PREFIXES.some((prefix) =>
+      window.location.pathname.startsWith(prefix),
+    );
+    if (!tabFree && id && url.searchParams.get(TAB_QUERY) !== id) {
       url.searchParams.set(TAB_QUERY, id);
       window.location.replace(url.href);
       return;

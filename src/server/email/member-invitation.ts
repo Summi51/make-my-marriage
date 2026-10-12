@@ -164,7 +164,10 @@ export async function sendMemberInvitationEmail(input: InvitationEmail) {
     throw new InvitationEmailError("Invalid email delivery response.");
   }
   if (response.ok && result.data?.testMode === true)
-    throw new InvitationEmailError("Volanea is in test mode.", "TEST_MODE");
+    throw new InvitationEmailError(
+      "Wedding email is in test mode.",
+      "TEST_MODE",
+    );
   if (response.ok && result.data?.messages?.some((message) => message.id))
     return;
   if (
@@ -177,7 +180,7 @@ export async function sendMemberInvitationEmail(input: InvitationEmail) {
     )
   )
     throw new InvitationEmailError(
-      "Volanea sender domain is not verified.",
+      "The wedding email sender is not verified.",
       "DOMAIN_NOT_VERIFIED",
     );
   throw new InvitationEmailError("Invitation email delivery failed.");

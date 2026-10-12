@@ -143,9 +143,9 @@ export async function createMemberInvitation(
     throw new WeddingError(
       "EMAIL_DELIVERY_FAILED",
       reason === "DOMAIN_NOT_VERIFIED"
-        ? "Verify your sending domain in Volanea before inviting anyone."
+        ? "The wedding email sender is not verified yet. Ask the site owner to finish email setup, then try again."
         : reason === "TEST_MODE"
-          ? "Volanea is in test mode, so no email was delivered. Use a live key to invite members."
+          ? "Wedding email is still in test mode, so this invitation was not delivered."
           : "We couldn't send the invitation. Please try again.",
       502,
     );

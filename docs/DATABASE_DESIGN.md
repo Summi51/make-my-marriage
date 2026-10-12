@@ -1262,6 +1262,8 @@ Guest {
 
     maxGuests: Number,
 
+    isFamily: Boolean, // family-group invitation label; party size stays in maxGuests
+
     invitedEventIds: [ObjectId],
 
     notes: String?,

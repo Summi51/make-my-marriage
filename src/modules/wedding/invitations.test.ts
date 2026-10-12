@@ -285,7 +285,7 @@ describe("wedding member invitations", () => {
     expect(await WeddingMemberInvitation.countDocuments()).toBe(0);
   });
 
-  it("explains when the Volanea sender domain is not verified", async () => {
+  it("explains when the wedding email sender is not verified", async () => {
     await expect(
       createMemberInvitation(
         {
@@ -307,12 +307,13 @@ describe("wedding member invitations", () => {
       ),
     ).rejects.toMatchObject({
       code: "EMAIL_DELIVERY_FAILED",
-      message: "Verify your sending domain in Volanea before inviting anyone.",
+      message:
+        "The wedding email sender is not verified yet. Ask the site owner to finish email setup, then try again.",
     });
     expect(await WeddingMemberInvitation.countDocuments()).toBe(0);
   });
 
-  it("does not leave a pending invitation when Volanea is in test mode", async () => {
+  it("does not leave a pending invitation when wedding email is in test mode", async () => {
     await expect(
       createMemberInvitation(
         {
@@ -332,7 +333,7 @@ describe("wedding member invitations", () => {
     ).rejects.toMatchObject({
       code: "EMAIL_DELIVERY_FAILED",
       message:
-        "Volanea is in test mode, so no email was delivered. Use a live key to invite members.",
+        "Wedding email is still in test mode, so this invitation was not delivered.",
     });
     expect(await WeddingMemberInvitation.countDocuments()).toBe(0);
   });

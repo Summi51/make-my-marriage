@@ -53,6 +53,13 @@ interface WeddingHomeProps {
     completed: number;
     tasks: DashboardTaskItem[];
   };
+  guestSummary?: {
+    totalGuests: number;
+    pendingInvitations: number;
+    attendingInvitations: number;
+    notAttendingInvitations: number;
+    totalPeopleAttending: number;
+  };
 }
 
 export function WeddingHome({
@@ -60,6 +67,13 @@ export function WeddingHome({
   members = [],
   eventCount = 0,
   taskProgress = { total: 0, completed: 0, tasks: [] },
+  guestSummary = {
+    totalGuests: 0,
+    pendingInvitations: 0,
+    attendingInvitations: 0,
+    notAttendingInvitations: 0,
+    totalPeopleAttending: 0,
+  },
 }: WeddingHomeProps) {
   const place =
     wedding.location.formattedAddress || "Dehradun, Uttarakhand, India";
@@ -158,14 +172,14 @@ export function WeddingHome({
     },
     {
       title: "Guest groups",
-      value: "0",
-      subtext: "Maximum party capacity: 0 people",
+      value: String(guestSummary.totalGuests),
+      subtext: `${guestSummary.totalPeopleAttending} attending across all celebrations`,
       link: "/account/wedding/guests",
       linkText: "View guests →",
-      secondaryLink: "/account/wedding/guests",
+      secondaryLink: "/account/wedding/guests/new",
       secondaryLinkText: "+ Add guest",
       isSample: false,
-      soon: true,
+      soon: false,
       icon: (
         <svg
           className="h-5 w-5 text-[#a67341]"
@@ -191,12 +205,12 @@ export function WeddingHome({
     },
     {
       title: "RSVP responses",
-      value: "0 / 0",
-      subtext: "Guest groups that have responded",
+      value: `${guestSummary.attendingInvitations + guestSummary.notAttendingInvitations} / ${guestSummary.totalGuests}`,
+      subtext: `${guestSummary.attendingInvitations} attending • ${guestSummary.notAttendingInvitations} declined`,
       link: "/account/wedding/invitations",
       linkText: "View RSVP summary →",
       isSample: false,
-      soon: true,
+      soon: false,
       icon: (
         <svg
           className="h-5 w-5 text-[#a67341]"

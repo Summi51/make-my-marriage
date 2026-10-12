@@ -45,6 +45,174 @@ test.beforeAll(async () => {
     .toBe(200);
 });
 
+test("gallery preserves event selection, paginates, refreshes, downloads ZIP and deletes", async ({
+  page,
+}) => {
+  await page.goto("/login");
+  await expect(page).toHaveURL(/tab=/);
+  const tab = await page.evaluate(() => window.name.replace("mmm-tab-", ""));
+  const headers = { Origin: "http://localhost:3100", "x-mmm-tab": tab };
+  const email = "gallery-browser@example.com";
+  const signup = await page.request.post("/api/auth/signup", {
+    headers,
+    data: {
+      name: "Gallery Tester",
+      email,
+      password: "isolated gallery password",
+    },
+  });
+  expect(signup.ok()).toBeTruthy();
+  const client = await MongoClient.connect(database.getUri());
+  const weddingId = new ObjectId();
+  const firstEvent = new ObjectId();
+  const secondEvent = new ObjectId();
+  try {
+    const db = client.db();
+    const user = await db
+      .collection("users")
+      .findOne({ emailNormalized: email });
+    expect(user).toBeTruthy();
+    await db.collection("weddings").insertOne({
+      _id: weddingId,
+      brideName: "Gallery",
+      groomName: "Tester",
+      weddingDate: "2027-01-01",
+      timeZone: "Asia/Kolkata",
+      location: {},
+      website: { slug: "gallery-browser" },
+      gallery: { tokenHash: "gallery-browser" },
+      deletedAt: null,
+      createdByUserId: user!._id,
+    });
+    await db.collection("wedding_memberships").insertOne({
+      weddingId,
+      userId: user!._id,
+      role: "ADMIN",
+      status: "ACTIVE",
+      joinedAt: new Date(),
+    });
+    for (const [id, name] of [
+      [firstEvent, "Morning Sangeet"],
+      [secondEvent, "Evening Sangeet"],
+    ] as const) {
+      await db.collection("events").insertOne({
+        _id: id,
+        weddingId,
+        name,
+        type: "SANGEET",
+        startsAt: new Date("2027-01-01"),
+        archivedAt: null,
+      });
+    }
+  } finally {
+    await client.close();
+  }
+  const png = Buffer.from(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aRZkAAAAASUVORK5CYII=",
+    "base64",
+  );
+  let photos = [firstEvent, secondEvent].map((eventId, index) => ({
+    id: new ObjectId().toString(),
+    eventId: String(eventId),
+    originalFilename: `photo-${index}.png`,
+    url: "/gallery-test-image",
+    sizeBytes: png.length,
+    createdAt: new Date().toISOString(),
+  }));
+  let uploadEvent: string | null = null;
+  await page.route("**/gallery-test-image", (route) =>
+    route.fulfill({ contentType: "image/png", body: png }),
+  );
+  await page.route("**/gallery-test-upload", (route) =>
+    route.fulfill({ status: 200 }),
+  );
+  await page.route("**/api/photos**", async (route) => {
+    const request = route.request();
+    const url = new URL(request.url());
+    if (url.pathname.endsWith("/upload-url")) {
+      uploadEvent = request.postDataJSON().eventId;
+      return route.fulfill({
+        json: {
+          data: {
+            uploadUrl: "http://localhost:3100/gallery-test-upload",
+            objectKey: "staging-test",
+          },
+        },
+      });
+    }
+    if (url.pathname.endsWith("/download"))
+      return route.fulfill({
+        json: { data: { url: "http://localhost:3100/gallery-test-image" } },
+      });
+    if (request.method() === "DELETE") {
+      photos = photos.filter((photo) => !url.pathname.endsWith(photo.id));
+      return route.fulfill({ json: { data: { success: true } } });
+    }
+    if (request.method() === "POST") {
+      expect(request.postDataJSON().eventId).toBe(uploadEvent);
+      photos.push({
+        ...photos[0],
+        id: new ObjectId().toString(),
+        eventId: uploadEvent!,
+        originalFilename: "uploaded.png",
+      });
+      return route.fulfill({ status: 201, json: { data: {} } });
+    }
+    const eventId = url.searchParams.get("eventId");
+    const visible = photos.filter((photo) =>
+      eventId ? photo.eventId === eventId : true,
+    );
+    const offset = Number(url.searchParams.get("cursor") || 0);
+    return route.fulfill({
+      json: {
+        data: visible.slice(offset, offset + 1),
+        pagination: {
+          nextCursor: offset + 1 < visible.length ? String(offset + 1) : null,
+          total: visible.length,
+        },
+      },
+    });
+  });
+  await page.goto(`/account/wedding/gallery?tab=${tab}`);
+  await page
+    .getByRole("button", { name: "Load more photos", exact: true })
+    .click();
+  await expect(page.getByText("2 Items")).toBeVisible();
+  await page
+    .getByRole("button", { name: "Evening Sangeet", exact: true })
+    .click();
+  await expect(page.getByText("1 Items")).toBeVisible();
+  await page
+    .getByRole("button", { name: "+ Upload photos", exact: true })
+    .click();
+  await page.locator("select").selectOption(String(secondEvent));
+  await page.locator('input[type="file"]').setInputFiles({
+    name: "uploaded.png",
+    mimeType: "image/png",
+    buffer: png,
+  });
+  await page
+    .getByRole("button", { name: "Upload 1 photo", exact: true })
+    .click();
+  await expect(page.getByText("2 Items")).toBeVisible();
+  expect(uploadEvent).toBe(String(secondEvent));
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download Zip", exact: true }).click();
+  const download = await downloadPromise;
+  const { readFile } = await import("node:fs/promises");
+  const { unzipSync } = await import("fflate");
+  const archive = unzipSync(await readFile((await download.path())!));
+  expect(Object.keys(archive)).toHaveLength(2);
+  page.once("dialog", (dialog) => dialog.accept());
+  await page
+    .getByRole("button", { name: "Delete uploaded", exact: true })
+    .click();
+  await expect(page.getByText("1 Items")).toBeVisible();
+  photos = [];
+  await page.getByRole("button", { name: "Refresh", exact: true }).click();
+  await expect(page.getByText("Your memories begin here")).toBeVisible();
+});
+
 for (const role of ["ADMIN", "MANAGER"] as const) {
   test(`${role} invitation preserves signup/login context and joins the wedding`, async ({
     page,

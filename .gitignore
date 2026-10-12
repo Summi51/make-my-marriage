@@ -14,4 +14,5 @@
 next-env.d.ts
 .augment/
 .tmp-manual/
+tmp/
 Untitled-1

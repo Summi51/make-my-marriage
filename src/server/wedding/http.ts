@@ -4,15 +4,20 @@ import { Types } from "mongoose";
 import { z } from "zod";
 import { WeddingError } from "@/modules/wedding/errors";
 
-export function requireObjectId(value: string) {
+export function requireObjectId(value: string, label = "member id") {
   if (!Types.ObjectId.isValid(value))
-    throw new WeddingError("VALIDATION_ERROR", "Check the member id.", 400);
+    throw new WeddingError("VALIDATION_ERROR", `Check the ${label}.`, 400);
   return value;
 }
 
 export { checkOrigin } from "@/server/auth/http";
 
-type KnownError = { code: string; message: string; status: number };
+type KnownError = {
+  code: string;
+  message: string;
+  status: number;
+  retryAfter?: number;
+};
 
 function isKnownError(error: unknown): error is KnownError {
   return (
@@ -20,7 +25,10 @@ function isKnownError(error: unknown): error is KnownError {
     error !== null &&
     "code" in error &&
     "status" in error &&
-    "message" in error
+    "message" in error &&
+    typeof (error as KnownError).code === "string" &&
+    typeof (error as KnownError).status === "number" &&
+    typeof (error as KnownError).message === "string"
   );
 }
 
@@ -81,7 +89,12 @@ export function weddingFailure(error: unknown) {
     },
     {
       status: known ? error.status : 500,
-      headers: { "Cache-Control": "no-store" },
+      headers: {
+        "Cache-Control": "no-store",
+        ...(known && error.retryAfter
+          ? { "Retry-After": String(error.retryAfter) }
+          : {}),
+      },
     },
   );
 }

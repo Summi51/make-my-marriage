@@ -70,7 +70,9 @@ export function WorkspaceChrome({
                     ? "Expenses"
                     : pathname.startsWith("/account/wedding/vendors")
                       ? "Vendors"
-                      : "Workspace";
+                      : pathname.startsWith("/account/wedding/gallery")
+                        ? "Gallery"
+                        : "Workspace";
 
   // When no wedding is set up yet (Initial setup screen)
   if (!weddingTitle) {

@@ -21,10 +21,10 @@ export async function consumeLimit(
   key: string,
   limit: number,
   now = Date.now(),
+  windowMs = 15 * 60 * 1000,
 ) {
   await connectToDatabase();
   await Counter.init();
-  const windowMs = 15 * 60 * 1000;
   const window = Math.floor(now / windowMs);
   const expiresAt = new Date((window + 1) * windowMs);
   const _id = createHash("sha256").update(`${key}:${window}`).digest("hex");

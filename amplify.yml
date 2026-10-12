@@ -7,7 +7,7 @@ frontend:
     build:
       commands:
         # Names only. Amplify supplies the values; this file must never contain them.
-        - env | grep -e '^APP_ORIGIN=' -e '^MONGODB_URI=' -e '^MEMBER_INVITATION_SECRET=' -e '^VOLANEA_API_KEY=' -e '^VOLANEA_FROM=' >> .env.production
+        - env | grep -e '^APP_ORIGIN=' -e '^MONGODB_URI=' -e '^MEMBER_INVITATION_SECRET=' -e '^CRON_SECRET=' -e '^VOLANEA_API_KEY=' -e '^VOLANEA_FROM=' -e '^R2_ACCOUNT_ID=' -e '^R2_ACCESS_KEY_ID=' -e '^R2_SECRET_ACCESS_KEY=' -e '^R2_BUCKET_NAME=' >> .env.production
         - npm run build
   artifacts:
     baseDirectory: .next

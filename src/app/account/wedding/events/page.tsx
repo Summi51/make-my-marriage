@@ -33,7 +33,7 @@ export default async function EventsPage({
       <EventsPageClient
         timeZone={wedding.timeZone}
         coupleNames={`${wedding.brideName} & ${wedding.groomName}`}
-        location={wedding.location.formattedAddress}
+        location={wedding.location?.formattedAddress}
       />
     </WorkspaceChrome>
   );

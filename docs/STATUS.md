@@ -71,7 +71,7 @@ Foundation, the public homepage, database infrastructure, account authentication
 ### Wedding member invitations
 
 - Admins can view wedding members, invite an Admin or Manager by email, see pending invitations, and revoke a pending invitation. Managers receive the approved forbidden state.
-- Secure 14-day invitation links store only an HMAC hash. Email delivery uses Volanea and removes the pending record if delivery fails so the Admin can retry.
+- Secure 14-day invitation links store only an HMAC hash. Email delivery removes the pending record if delivery fails so the Admin can retry.
 - Public invitation acceptance covers signed-out, ready, success, wrong-email, existing-wedding, expired, revoked, already-accepted, and retry states. A new guest is sent to signup; a registered guest is sent to sign-in. Both open with the invited email filled in and return to the invitation.
 - Accepting an invitation creates the wedding membership and marks the invitation accepted in one transaction.
 - Admins can change Admin/Manager roles, remove another member or leave with confirmation. The final Admin cannot leave, be removed or be demoted. The recipient's workspace refreshes membership on return to the window; removed members see wedding setup.
@@ -124,12 +124,109 @@ Foundation, the public homepage, database infrastructure, account authentication
 - Malformed member or event ids on task requests return `VALIDATION_ERROR` (400) rather than a server error.
 - Sidebar and dashboard sections whose routes are not built yet render as non-clickable "Soon" items instead of links that would reach a 404.
 
+### Wedding guests & invitation links
+
+- Guest model, Zod schemas, format utilities, and use-cases scoped by wedding id (`src/modules/guests/`). Create, list, get, update, and hard delete matching `PRD.md`, `DATABASE_DESIGN.md`, and `API_DESIGN.md`.
+- Cryptographically secure 32-byte base64url stable `invitationToken` generated on Guest creation, excluded from default model reads and CRUD projections.
+- "Invite with family" feature option: dedicated family group toggle adding `👨‍👩‍👧‍👦 Family` categorization, group party size support, and personalized "and Family" greeting on the invitation.
+- API routes: `GET/POST /api/guests`, `GET/PATCH/DELETE /api/guests/:guestId`, `GET /api/guests/:guestId/invitation-link`, `GET /api/guests/rsvp-summary`, `GET /api/public/invitations/:token`, `POST /api/public/invitations/:token/rsvp`.
+- Rate-limited public RSVP endpoints that enforce party size capacity and validate origin and input before consuming quota.
+- Wedding guests list view matching Stitch screen `99857df1c96d4b02867d4baf5159bf42`:
+  - Search input, Event filter dropdown, RSVP status dropdown, and bottom count summary with Apply/Clear filters actions.
+  - Empty state with warm gold circular badge and "+ Add your first guest" CTA.
+  - Populated guest card grid displaying initials avatar, family group badge, party size, RSVP status pill, invited events count, quick link copy button, and details navigation.
+- Add and Edit guest forms matching Stitch screen `5edae1592db84d25b7572c13b60c2e83`:
+  - Two-column layout with Guest details, Invitation planning (including maximum party size and "Invite with family" toggle), and Event association checkboxes.
+  - Wedding program events are listed from the member's own itinerary; the form links to create one when none exist yet.
+  - Master "All program events" toggle checkbox for one-click selection of all ceremonies or individual ceremony toggling.
+  - Right-hand contextual guidance cards ("Planning Together", "A Thoughtful Detail").
+- Guest detail and invitation management view matching Stitch screen `715e1abab230439b8279f33ae5091971`:
+  - Stable invitation link card with readonly copyable URL, "Copy invitation link" with instant checkmark feedback, and "Open invitation" external link.
+  - Contact Registry card with initials monogram, email, phone, overall RSVP status, and maximum party size.
+  - Permitted Ceremonies card listing invited celebrations.
+  - Celebratory deep wine hero card.
+  - Delete guest modal with confirmation.
+- Public guest invitation and RSVP experience matching Stitch screens `cc9c61b5bb114754867ac94b920bd962`, `017eda1dd246463eaad2d5bd09fcfff4`, and `eb5ec48ff0a44ebdbebf6abfe9802c8d`:
+  - Top navigation bar with Make My Marriage logo and guest initial monogram.
+  - Couple invitation header with circular heart emblem, personalized recipient greeting ("An invitation for [Guest Name]"), serif typography, quote, and wedding date.
+  - Hero image celebration banner featuring high-resolution wedding photograph with golden overlay typography.
+  - Floating RSVP status card with real-time status transitions:
+    - Pending RSVP state with "Respond to invitation →" CTA and headcount capacity.
+    - Confirmed attending state with emerald status indicator, confirmed attendee headcount, and "Update response →" button.
+    - Regretfully declined state with update option.
+  - Celebration Itinerary timeline displaying personalized ceremony cards (Mehndi, Haldi, Sangeet, Nikah/Solemnization with `MAIN EVENT` styling, and Walima Reception) with venue, dress codes, and dates/times.
+  - Ceremony-level `✓ Attending • X Guests` badges on itinerary cards when RSVP is confirmed.
+  - Interactive Formal RSVP modal dialog matching screen `017eda1dd246463eaad2d5bd09fcfff4`:
+    - "Yes, joyfully accepting!" and "Regretfully declining" custom radio cards.
+    - Dynamic headcount selector buttons (1 to max party size).
+    - Notice banner, private submission disclaimer, and instant async submit with real-time optimistic update.
+- Workspace sidebar activated for Guests navigation item.
+- Dashboard updated to display real Guest groups and RSVP responses counts linked directly to the guest list.
+- Guest and invitation flows were exercised in a real browser (Chromium) against the dev server on localhost:3001, including the public RSVP route. That browser script is a manual QA aid and is not part of the committed `tests/e2e` suite.
+
+### Invitations & RSVP management dashboard
+
+- Dedicated "Invitations & RSVP" workspace dashboard at `/account/wedding/invitations`, matching the Make My Marriage luxury wine-and-gold design aesthetic.
+- Activated the `Invitations & RSVP` link in `src/app/_components/wedding/workspace-sidebar.tsx`.
+- Summary statistics cards displaying Total Invited (parties & guest headcount capacity), Confirmed Attending parties & guests (emerald status), Pending RSVPs (amber status), and Declined responses (rose status).
+- Interactive segmented filter tabs: `All`, `Pending RSVP`, `Confirmed`, `Declined`, and `Unsent`.
+- Search by guest name, phone, or email with debouncing, plus event/celebration filtering dropdown.
+- Guest invitations tracking data table:
+  - Guest/Family info with party size badge, contact info, and notes.
+  - Invited ceremonies pill tags.
+  - Delivery status ("Sent [Date]" or "Not Sent") with reminder count indicators.
+  - RSVP confirmation status badge.
+  - Action buttons:
+    - One-click WhatsApp share with pre-filled luxury personalized greeting and direct guest `/invite/[token]` link.
+    - Copy personalized invitation link with visual feedback.
+    - Direct open invitation in new tab.
+    - Mark as sent and individual reminder triggers.
+- Interactive Modals:
+  - **WhatsApp Share Modal**: Review/edit personalized invitation copy with couple names, wedding venue, and unique RSVP link, with "Copy Message" and "Open in WhatsApp" (`https://wa.me/...`) triggers.
+  - **Preview Digital Invite Modal**: Authentic luxury digital card preview with couple names, wedding date/venue, ceremonies list, and interactive RSVP widget.
+  - **Batch Send Reminders Modal**: Confirmation dialog targeting all pending guests, with real-time feedback toast and live summary refresh.
+- Backend API endpoints and domain use-cases:
+  - `POST /api/guests/[guestId]/send-invitation`
+  - `POST /api/guests/[guestId]/send-reminder`
+  - `POST /api/guests/send-reminders` (batch update)
+  - Enhanced `listGuests` with `invitationStatus` filter (`ALL`, `SENT`, `UNSENT`) and direct `invitationToken` inclusion.
+  - Enhanced `getRsvpSummary` with `totalCapacity`, `sentInvitations`, and `unsentInvitations`.
+- Unit tests added covering invitation delivery, individual and batch reminders, and status filtering.
+
+### Scheduled guest reminders
+
+- A daily job emails guests who still need to reply, three days before the wedding date.
+- Guests who have already accepted receive an event reminder on the day before and the day of each celebration they were invited to.
+- Email is sent by the job. WhatsApp is prepared as a message the member opens and sends; the server does not send WhatsApp.
+- The same reminder is not sent twice. A manual reminder to the same guest is also blocked for 24 hours.
+- The job route is `POST /api/internal/jobs/reminders`, protected by `CRON_SECRET`.
+
+### Wedding gallery photo storage
+
+- Signed-in Admin and Manager members can upload JPEG, PNG, and WebP photos, up to 10 MB each and 20 at a time, from `/account/wedding/gallery`.
+- The browser uploads directly to a private Cloudflare R2 staging key. The server checks the stored size, type, and image signature, then copies the photo to a final private key before it appears in the gallery.
+- Photos stay scoped to the signed-in wedding. A wedding can keep 2,000 ready photos or 5 GB, whichever comes first. Expired unfinished uploads are removed before the next upload link, and only after their staging file is deleted.
+- The gallery loads one page of 24 photos. Load more fetches the next page of the open album. Download uses a short-lived private link. Delete removes the stored photo and hides it from the gallery.
+- Download Zip collects the open album, not only the page on screen, and stops at 100 MB. R2 must allow browser GET for that download.
+- Guest gallery links and QR sharing are not part of this step.
+
+### Upgraded RSVP reminders automation modal
+
+- Upgraded the "Send RSVP Reminders" modal on `/account/wedding/invitations` matching Stitch screen `c8498b37`.
+- Multi-template selection (`Gentle Reminder` [Recommended] vs `Final Deadline Reminder` [7 Days Left]) with dynamic subject prefilling and live editable subject line.
+- Dynamic targeting summary banner calculating pending guests and estimated attendees across celebrations.
+- Live personalized email preview card reflecting the selected reminder template.
+- Pinned modal footer with count-aware batch delivery trigger.
+- Supported in backend use-case `batchSendReminders` with custom subjects and template styles.
+
 ## Not started
 
 - Password recovery.
 - Permanent event deletion (archiving is the only removal path).
-- Functional backing domain modules for guests, invitations, expenses, vendors, website, gallery and livestream.
+- Functional backing domain modules for expenses, vendors, website and livestream.
 
 ## Next
 
-Domain implementation for the next active workspace module (Guests & Invitations).
+Gallery follow-up is implemented: event albums, paged refresh, missing-object reconciliation, confirmed deletion, a 2,000-photo or 5 GB wedding cap, and browser ZIP downloads of the open album up to 100 MB. R2 GET CORS is still required for ZIP downloads.
+
+Domain implementation for the next active workspace module (Finance & Expenses or Vendors).

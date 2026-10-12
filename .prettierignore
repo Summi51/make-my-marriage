@@ -3,6 +3,7 @@ coverage/
 node_modules/
 .augment/
 .tmp-manual/
+tmp/
 
 # Preserve source-document formatting.
 docs/API_DESIGN.md

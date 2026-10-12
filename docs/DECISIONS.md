@@ -2,6 +2,14 @@
 
 ## Accepted foundation decisions
 
+- Gallery follow-up (2026-10-12): the requested ZIP download expands the initial
+  single-download scope. Build ZIPs in the browser from private signed URLs with
+  a 100 MiB album limit, preserving the direct-to-R2 architecture. Refresh checks
+  object existence and tombstones metadata only for confirmed missing objects.
+  Each wedding may store 2,000 ready photos or 5 GiB, whichever comes first.
+  Expired pending staging objects for that wedding are deleted before the next
+  upload link is issued. The gallery loads one album page at a time.
+
 - Use one deployable Next.js full-stack application at the repository root.
 - Use TypeScript, App Router Route Handlers and REST.
 - Organize product behavior as a modular monolith under `src/modules/`.
@@ -39,6 +47,16 @@
 
 - Workspace navigation and dashboard cards render sections whose routes do not exist yet (guests, invitations & RSVP, expenses, vendors, website, gallery, guest QR, livestream) as non-clickable "Soon" items instead of links, so the design preview never sends a member to a 404. Each entry becomes a real link when its module ships.
 - Task due dates are date-only. `POST`/`PATCH /api/tasks` stores the UTC instant of midnight in `Wedding.timeZone`, as `API_DESIGN.md` requires, so the saved day matches the day the member chose in every supported time zone. Storing plain UTC midnight shifted the day backwards in time zones behind UTC and moved it again on each edit.
+
+## Wedding guests milestone decisions
+
+- `Guest.isFamily` is a persisted boolean added for the "Invite with family" affordance in the guest UI. It is a labelling flag only: party size still lives in `maxGuests`, so the `DATABASE_DESIGN.md` rule that one Guest record represents one invitation is unchanged. `DATABASE_DESIGN.md` now lists the field.
+- `GET /api/guests/:guestId/invitation-link` returns `{ url, token }` rather than the `{ url }` shown in `API_DESIGN.md` §45. The UI rebuilds the link against the browser's current origin so a preview deployment does not hand members a link pointing at `APP_ORIGIN`. The token is already present inside `url`, so this does not widen exposure.
+- Guest lists return `{ data, pagination: { page, limit, total, totalPages } }`, order by name then ID, and default `limit` to 20, matching `API_DESIGN.md` §39.
+- Guest RSVP writes happen only through the public token route. That route compares and sets on the document version (`__v`), increments it, and enforces party-size capacity, so a member edit and a guest response cannot silently overwrite each other.
+- Guest invitation and reminder email is delivered through the same email provider already used for member invitations. The provider name is an implementation detail and is not shown in the product UI or in member-facing errors.
+- WhatsApp is not sent by the server. Email is delivered directly; WhatsApp opens a prefilled chat for the member to send. Scheduled reminders follow the same split: the daily job emails, and it stores a ready WhatsApp message for the member to open.
+- The daily job is `POST /api/internal/jobs/reminders`, authorized with `Authorization: Bearer <CRON_SECRET>`. Amplify has no built-in scheduler, so an external daily caller is required. Three days before `weddingDate`, pending guests receive an RSVP reminder. On the day before and the day of an event, guests who accepted that event receive an event reminder. A unique dispatch key stops the same reminder being sent twice. A manual reminder to the same guest is also blocked for 24 hours.
 
 ## Remaining unresolved decisions
 

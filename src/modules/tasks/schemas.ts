@@ -29,8 +29,9 @@ const optionalText = (max: number) =>
     .string()
     .trim()
     .max(max)
+    .nullable()
     .optional()
-    .transform((value) => (value === "" ? null : (value ?? undefined)));
+    .transform((value) => (value === "" || value === null ? null : value));
 
 const objectIdPattern = /^[a-f\d]{24}$/i;
 
@@ -60,11 +61,15 @@ const filterObjectId = z
     "Check the id.",
   );
 
-const isoDateTime = z
+const optionalIsoDateTime = z
   .string()
   .trim()
+  .nullable()
+  .optional()
+  .transform((value) => (value === "" || value === null ? null : value))
   .refine(
-    (value) => !Number.isNaN(Date.parse(value)),
+    (value) =>
+      value === null || value === undefined || !Number.isNaN(Date.parse(value)),
     "Use a valid ISO date-time for the due date.",
   );
 
@@ -73,7 +78,7 @@ export const createTaskSchema = z.object({
   description: optionalText(2000),
   assignedMembershipId: optionalObjectId,
   eventId: optionalObjectId,
-  dueDate: isoDateTime.nullable().optional(),
+  dueDate: optionalIsoDateTime,
   priority: z.enum(taskPriorities).default("MEDIUM"),
   status: z.enum(taskStatuses).default("TODO"),
 });
@@ -84,7 +89,7 @@ export const updateTaskSchema = z
     description: optionalText(2000),
     assignedMembershipId: optionalObjectId,
     eventId: optionalObjectId,
-    dueDate: isoDateTime.nullable().optional(),
+    dueDate: optionalIsoDateTime,
     priority: z.enum(taskPriorities).optional(),
     status: z.enum(taskStatuses).optional(),
   })

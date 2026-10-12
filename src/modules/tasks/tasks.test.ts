@@ -242,5 +242,21 @@ describe("tasks API and domain use-cases", () => {
     );
     expect(generalOnly.status).toBe(200);
     expect((await generalOnly.json()).data).toHaveLength(1);
+
+    // Null optional fields (e.g. description, dueDate) do not fail validation.
+    const nullFieldsRes = await createTaskRoute(
+      apiRequest("POST", "/api/tasks", cookie, {
+        title: "Flower Arange",
+        description: null,
+        assignedMembershipId: null,
+        eventId: null,
+        dueDate: null,
+      }),
+    );
+    expect(nullFieldsRes.status).toBe(201);
+    const nullFieldsTask = (await nullFieldsRes.json()).data;
+    expect(nullFieldsTask.title).toBe("Flower Arange");
+    expect(nullFieldsTask.description).toBeNull();
+    expect(nullFieldsTask.dueDate).toBeNull();
   });
 });
