@@ -92,15 +92,11 @@ export function WorkspaceSidebar({
           name: "My Vendors",
           href: "/account/wedding/vendors",
           icon: "building-store",
-          badge: "Soon",
-          disabled: true,
         },
         {
           name: "Discover Vendors",
           href: "/account/wedding/vendors/discover",
           icon: "search",
-          badge: "Soon",
-          disabled: true,
         },
       ],
     },
@@ -596,10 +592,17 @@ export function WorkspaceSidebar({
             </p>
             <div className="space-y-0.5">
               {section.items.map((item) => {
-                const isActive =
-                  !item.disabled &&
-                  (pathname === item.href ||
-                    pathname.startsWith(`${item.href}/`));
+                const matches =
+                  pathname === item.href ||
+                  pathname.startsWith(`${item.href}/`);
+                const longerMatch = section.items.some(
+                  (other) =>
+                    other.href !== item.href &&
+                    other.href.length > item.href.length &&
+                    (pathname === other.href ||
+                      pathname.startsWith(`${other.href}/`)),
+                );
+                const isActive = !item.disabled && matches && !longerMatch;
                 const itemClass = `group flex items-center justify-between rounded-xl px-4 py-2 text-[13.5px] font-medium transition-colors duration-150 ${
                   item.disabled
                     ? "cursor-not-allowed text-[#a89ea1]"

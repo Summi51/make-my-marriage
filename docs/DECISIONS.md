@@ -2,6 +2,8 @@
 
 ## Accepted foundation decisions
 
+- Vendor discovery (2026-10-14): My Vendors is fully private and editable; optional Google Places Text Search displays live results without caching them. A Google result links to Maps and a member may enter their own vendor record. `DATABASE_DESIGN.md` §52 and `API_DESIGN.md` §61 previously required copying Places details into a permanent internal vendor record. Google's [Places policies](https://developers.google.com/maps/documentation/places/web-service/policies) restrict long-term storage of Places content (Place IDs are an exception), so automatic copying and `/api/vendors/from-place` are deferred until a compliant user-confirmation/data-lifecycle design is agreed. Do not silently persist Google names, addresses, ratings, or contact details from the provider. Discovery requires a server-side Places API key and may incur usage charges; it remains disabled when no key is configured. No paid service or subscription is activated by the app.
+
 - Expense payment types (2026-10-13): An expense row records an amount
   actually paid, with a structured `paymentKind` of `PAID`, `ADVANCE`,
   `PARTIAL`, or `FINAL`. The total includes all of these amounts exactly

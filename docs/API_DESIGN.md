@@ -2147,6 +2147,12 @@ source = MANUAL
 
 # 61. Add Discovered Vendor
 
+Deferred. The original contract below is retained as product intent, not a
+live V1 route. See the vendor-discovery decision in `DECISIONS.md`: Google
+Places fields must not be automatically copied into permanent vendor records.
+Members can use the live discovery results to identify a vendor and then add
+their own details with `POST /api/vendors`.
+
 ## POST `/api/vendors/from-place`
 
 Authentication required.
@@ -2207,6 +2213,29 @@ rather than hard deleting.
 
 ---
 
+# 64a. Restore Vendor
+
+## POST `/api/vendors/:vendorId/restore`
+
+Authentication required.
+
+Clears `archivedAt` and returns the vendor to the active roster. Restoring a
+vendor that is not archived, or that belongs to another wedding, returns
+`NOT_FOUND`.
+
+### Response
+
+```json
+{
+  "data": {
+    "id": "...",
+    "archivedAt": null
+  }
+}
+```
+
+---
+
 # 65. Vendor Discovery
 
 ## GET `/api/vendor-discovery/search`
@@ -2218,8 +2247,8 @@ Authentication required.
 ```text
 category
 query
-latitude
-longitude
+lat
+lng
 ```
 
 The backend may default coordinates from Wedding if not provided.
@@ -2240,11 +2269,16 @@ Google Places
 Results
 ```
 
+The implemented endpoint accepts `lat` and `lng` as the coordinate pair. Paid
+Google searches are rate-limited per signed-in user. If
+`GOOGLE_PLACES_API_KEY` is not configured, it returns `NOT_CONFIGURED` (503)
+without calling Google and without consuming that rate limit.
+
 Or custom:
 
 ```text
-latitude=28.6139
-longitude=77.2090
+lat=28.6139
+lng=77.2090
 ```
 
 ---

@@ -232,12 +232,26 @@ Foundation, the public homepage, database infrastructure, account authentication
 - Workspace sidebar navigation item activated under `FINANCE & VENDORS` -> `Expenses`.
 - Main dashboard (`/account`) synchronized with real live `expenseSummary`.
 
+### My Vendors and Discovery (Stitch Matched with Google Maps)
+
+- Dedicated vendor domain `src/modules/vendors/` with Mongoose model, Zod validation schemas, and wedding-scoped use-cases.
+- Endpoints: `GET /api/vendors`, `POST /api/vendors`, `GET /api/vendors/[vendorId]`, `PATCH /api/vendors/[vendorId]`, `DELETE /api/vendors/[vendorId]`, `POST /api/vendors/[vendorId]/restore`, and `GET /api/vendor-discovery/search`.
+- Production UI at `/account/wedding/vendors`:
+  - Metric cards show active vendor count, recorded agreed cost, how many vendors have a cost, and how many categories are in use. Paid advances and balances stay on Expenses.
+  - City search area, category filters, search, and archived roster with Restore.
+  - Map search opens the wedding city. It does not invent ratings, distances, or a vetted badge.
+  - Vendor cards show the recorded agreed cost, contact actions, and archive. Archived cards restore instead of editing.
+  - "+ Connect Another Vendor" card and ceremony-specialist discovery link.
+  - Export contacts to CSV.
+- `/account/wedding/vendors/discover` uses Google Places when a key is configured. Without a key, search opens a free Google Maps link instead of a hard error. Category links from My Vendors open the matching category.
+- Sidebar highlights Discover Vendors without also highlighting My Vendors.
+
 ## Not started
 
 - Password recovery.
 - Permanent event deletion (archiving is the only removal path).
-- Functional backing domain modules for vendors, website and livestream.
+- Functional backing domain modules for website, guest QR live photo drops, and livestream.
 
 ## Next
 
-- Domain implementation for the next active workspace module (Vendors: My Vendors and Discover Vendors).
+- Wedding Website and guest live QR code experience.
