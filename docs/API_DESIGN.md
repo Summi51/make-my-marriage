@@ -1205,6 +1205,29 @@ archivedAt = now
 
 ---
 
+# 33a. Restore Event
+
+## POST `/api/events/:eventId/restore`
+
+Authentication required.
+
+Clears `archivedAt` and returns the event to the active itinerary. Existing
+guest, task, expense, and photo links are unchanged. Restoring an event that
+is not archived, or that belongs to another wedding, returns `NOT_FOUND`.
+
+### Response
+
+```json
+{
+  "data": {
+    "id": "...",
+    "archivedAt": null
+  }
+}
+```
+
+---
+
 # 34. Tasks
 
 ## GET `/api/tasks`
@@ -1961,6 +1984,7 @@ page
 limit
 
 category
+paymentKind
 eventId
 vendorId
 from
@@ -1988,6 +2012,7 @@ expenseDate DESC
   "currency": "INR",
   "expenseDate": "2026-09-01",
   "category": "PHOTOGRAPHY",
+  "paymentKind": "ADVANCE",
   "eventId": "...",
   "vendorId": "...",
   "notes": "Advance payment"
@@ -2016,7 +2041,16 @@ Authentication required.
 {
   "data": {
     "totalExpensePaise": 174250000,
+    "advancePaise": 15000000,
+    "advanceCount": 3,
     "currency": "INR",
+    "byPaymentKind": [
+      {
+        "paymentKind": "ADVANCE",
+        "amountPaise": 15000000,
+        "count": 3
+      }
+    ],
     "byCategory": [
       {
         "category": "VENUE",
@@ -2030,6 +2064,9 @@ Authentication required.
   }
 }
 ```
+
+`totalExpensePaise` sums actual payments, including advances and part
+payments. It is not an agreed vendor cost or an unpaid balance.
 
 ---
 
@@ -3843,18 +3880,22 @@ settings and QR remain deferred.
 - DELETE returns `{ data: { success: true } }` after R2 deletion and metadata
   tombstoning. Storage failures retain metadata and return a retryable error.
 - Issuance is limited to 120 requests/member/15 minutes, then 600/wedding/15
-  minutes. Unauthenticated, malformed, and invalid-event requests do not consume
-  this quota. There is no application-wide photo quota shared by other weddings.
-  Each wedding may keep 2,000 ready photos or 5 GiB, whichever is reached first.
+  minutes, then 400 new uploads for the whole R2 account per day. Unauthenticated,
+  malformed, and invalid-event requests do not consume this quota. The free R2
+  account is shared, so every wedding together may keep 2,000 ready or pending
+  photos or 8 GiB, whichever is reached first. This supersedes the earlier
+  per-wedding 2,000-photo or 5 GiB cap. Each photo must be 4 MB or smaller.
   Expired pending staging uploads are removed for that wedding before the next
-  upload link is issued. A full gallery returns 409.
+  upload link is issued. A full account returns 409. A used daily allowance
+  returns 429. Saved photos remain viewable either way.
 - Private metadata and URL responses use Cache-Control: no-store. Provider
   failures are mapped to a generic storage-unavailable error without logging
   keys, credentials, signed URLs or raw provider responses.
 
-Gallery refresh loads one cursor page for the selected album and checks object existence in R2. Later pages load only when the member asks.
-Only a definitive object HEAD 404 tombstones missing metadata; permission errors
+Gallery refresh loads one cursor page for the selected album and signs each tile from stored metadata. It does not HEAD every object. Later pages load only when the member asks.
+Download still checks the object. Only a definitive object HEAD 404 tombstones missing metadata; permission errors
 and storage outages return an error without treating the object as deleted.
+If the browser cannot PUT directly to R2, the same reserved key is uploaded through `POST /api/photos/upload-fallback`. That route rejects a body over 4 MB before writing, and rejects a file whose bytes are not a JPEG, PNG, or WebP before the storage write.
 Albums use actual event IDs (including separate events of the same type), with
 an unassigned Wedding Memories album. Admins and Managers can delete photos
 through the app after confirmation. Storage account operators retain access to

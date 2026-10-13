@@ -147,3 +147,14 @@ export async function archiveEvent(weddingId: string, eventId: string) {
   );
   if (!event) throw new WeddingError("NOT_FOUND", "Event not found.", 404);
 }
+
+export async function restoreEvent(weddingId: string, eventId: string) {
+  await connectToDatabase();
+  const event = await Event.findOneAndUpdate(
+    { _id: eventId, weddingId, archivedAt: { $ne: null } },
+    { $set: { archivedAt: null } },
+    { returnDocument: "after" },
+  ).lean();
+  if (!event) throw new WeddingError("NOT_FOUND", "Event not found.", 404);
+  return toEventDto(event);
+}

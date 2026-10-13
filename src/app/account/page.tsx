@@ -10,6 +10,7 @@ import {
 import { listDashboardTasks } from "@/modules/tasks/use-cases";
 import { countActiveEvents } from "@/modules/events/use-cases";
 import { getRsvpSummary } from "@/modules/guests/use-cases";
+import { getExpenseSummary } from "@/modules/expenses/use-cases";
 import { WorkspaceChrome } from "../_components/wedding/workspace-chrome";
 import { SetupForm } from "../_components/wedding/setup-form";
 import { WeddingHome } from "../_components/wedding/wedding-home";
@@ -33,6 +34,18 @@ const accountContext = cache(async (tab?: string) => {
         notAttendingInvitations: 0,
         totalPeopleAttending: 0,
       },
+      expenseSummary: {
+        totalExpensePaise: 0,
+        totalExpenseRupees: 0,
+        currency: "INR",
+        totalTransactions: 0,
+        advanceCount: 0,
+        advancePaise: 0,
+        advanceRupees: 0,
+        byPaymentKind: [],
+        byCategory: [],
+        byEvent: [],
+      },
     };
   const { wedding, membership } = await getMembershipContext(user.id);
   let members: { name: string; role: "ADMIN" | "MANAGER" }[] = [];
@@ -49,6 +62,18 @@ const accountContext = cache(async (tab?: string) => {
     notAttendingInvitations: 0,
     totalPeopleAttending: 0,
   };
+  let expenseSummary: Awaited<ReturnType<typeof getExpenseSummary>> = {
+    totalExpensePaise: 0,
+    totalExpenseRupees: 0,
+    currency: "INR",
+    totalTransactions: 0,
+    advanceCount: 0,
+    advancePaise: 0,
+    advanceRupees: 0,
+    byPaymentKind: [],
+    byCategory: [],
+    byEvent: [],
+  };
   if (wedding) {
     const weddingId = wedding._id.toString();
     try {
@@ -61,11 +86,13 @@ const accountContext = cache(async (tab?: string) => {
       // Fallback if listMembers fails
     }
     try {
-      [eventCount, taskProgress, guestSummary] = await Promise.all([
-        countActiveEvents(weddingId),
-        listDashboardTasks(weddingId, wedding.timeZone),
-        getRsvpSummary(weddingId),
-      ]);
+      [eventCount, taskProgress, guestSummary, expenseSummary] =
+        await Promise.all([
+          countActiveEvents(weddingId),
+          listDashboardTasks(weddingId, wedding.timeZone),
+          getRsvpSummary(weddingId),
+          getExpenseSummary(weddingId),
+        ]);
     } catch {
       // Keep zeros if planning data cannot be loaded
     }
@@ -78,6 +105,7 @@ const accountContext = cache(async (tab?: string) => {
     eventCount,
     taskProgress,
     guestSummary,
+    expenseSummary,
   };
 });
 
@@ -112,6 +140,7 @@ export default async function AccountPage({
     eventCount,
     taskProgress,
     guestSummary,
+    expenseSummary,
   } = await accountContext(tab);
   if (!user)
     redirect(
@@ -200,6 +229,7 @@ export default async function AccountPage({
         eventCount={eventCount}
         taskProgress={taskProgress}
         guestSummary={guestSummary}
+        expenseSummary={expenseSummary}
       />
     </WorkspaceChrome>
   );

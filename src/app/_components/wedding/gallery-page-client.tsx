@@ -68,7 +68,7 @@ interface GalleryPageClientProps {
 }
 
 const ALLOWED = new Set(["image/jpeg", "image/png", "image/webp"]);
-const MAX_BYTES = 10 * 1024 * 1024;
+const MAX_BYTES = 4 * 1024 * 1024;
 const MAX_BATCH = 20;
 
 export function GalleryPageClient({ wedding, events }: GalleryPageClientProps) {
@@ -234,7 +234,7 @@ export function GalleryPageClient({ wedding, events }: GalleryPageClientProps) {
         progress: tooBig || wrongType ? 0 : 100,
         previewUrl: URL.createObjectURL(file),
         errorMessage: tooBig
-          ? "Each photo must be 10 MB or smaller."
+          ? "Each photo must be 4 MB or smaller."
           : wrongType
             ? "Use a JPEG, PNG, or WebP photo."
             : undefined,
@@ -296,28 +296,50 @@ export function GalleryPageClient({ wedding, events }: GalleryPageClientProps) {
       return false;
     }
     markQueue(item.id, { progress: 40 });
-    let stored: Response;
+    let directUploadSucceeded = false;
     try {
-      stored = await fetch(reservedJson.data.uploadUrl, {
+      const stored = await fetch(reservedJson.data.uploadUrl, {
         method: "PUT",
         headers: { "content-type": mimeType },
         body: file,
       });
+      directUploadSucceeded = stored.ok;
     } catch {
-      markQueue(item.id, {
-        status: "needs_attention",
-        retryable: true,
-        errorMessage: "The photo did not reach storage. Try again.",
-      });
-      return false;
+      directUploadSucceeded = false;
     }
-    if (!stored.ok) {
-      markQueue(item.id, {
-        status: "needs_attention",
-        retryable: true,
-        errorMessage: "The photo did not reach storage. Try again.",
-      });
-      return false;
+
+    if (!directUploadSucceeded) {
+      // Direct R2 upload failed (e.g. CORS preflight restriction on Amplify / hosting).
+      // Fallback: upload securely via same-origin route
+      try {
+        const fallbackForm = new FormData();
+        fallbackForm.append("objectKey", reservedJson.data.objectKey);
+        fallbackForm.append("file", file);
+
+        const fallbackRes = await tabFetch("/api/photos/upload-fallback", {
+          method: "POST",
+          body: fallbackForm,
+        });
+
+        if (!fallbackRes.ok) {
+          const fallbackJson = await fallbackRes.json().catch(() => null);
+          markQueue(item.id, {
+            status: "needs_attention",
+            retryable: true,
+            errorMessage:
+              fallbackJson?.error?.message ??
+              "The photo did not reach storage. Try again.",
+          });
+          return false;
+        }
+      } catch {
+        markQueue(item.id, {
+          status: "needs_attention",
+          retryable: true,
+          errorMessage: "The photo did not reach storage. Try again.",
+        });
+        return false;
+      }
     }
     markQueue(item.id, { progress: 75 });
     const confirmed = await tabFetch("/api/photos", {
@@ -878,7 +900,7 @@ export function GalleryPageClient({ wedding, events }: GalleryPageClientProps) {
               <p className="mb-8 max-w-md text-xs leading-relaxed text-[#7A7269] sm:text-sm">
                 {loadError
                   ? "Refresh the page and try again. Photos already saved stay in private storage."
-                  : "From the first celebration to the last dance, give your favourite moments a home. JPEG, PNG, and WebP photos up to 10 MB are saved to this wedding's private gallery."}
+                  : "From the first celebration to the last dance, give your favourite moments a home. JPEG, PNG, and WebP photos up to 4 MB are saved to this wedding's private gallery."}
               </p>
 
               {/* Main Action CTA Button */}
@@ -906,10 +928,10 @@ export function GalleryPageClient({ wedding, events }: GalleryPageClientProps) {
               <div className="flex flex-col gap-1 rounded-xl bg-white/80 p-4 shadow-2xs backdrop-blur-xs">
                 <div className="flex items-center gap-2 font-serif text-sm font-bold text-[#500926]">
                   <span className="text-[#865045]">✦</span>
-                  <span>10 MB each</span>
+                  <span>4 MB each</span>
                 </div>
                 <span className="text-[11.5px] leading-relaxed text-[#7A7269]">
-                  Upload up to 20 photos at a time. Each photo must be 10 MB or
+                  Upload up to 20 photos at a time. Each photo must be 4 MB or
                   smaller.
                 </span>
               </div>
@@ -1054,7 +1076,7 @@ export function GalleryPageClient({ wedding, events }: GalleryPageClientProps) {
                   or <span className="underline">browse files</span>
                 </p>
                 <span className="mt-3 text-[11px] text-[#A8A199]">
-                  JPEG, PNG or WebP · Up to 10 MB each · 20 per batch
+                  JPEG, PNG or WebP · Up to 4 MB each · 20 per batch
                 </span>
               </div>
 

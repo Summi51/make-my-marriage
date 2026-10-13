@@ -1,5 +1,7 @@
 "use client";
+import { tabFetch } from "@/lib/tab-session";
 import Link from "next/link";
+import { useState } from "react";
 import { eventTypeLabels } from "@/modules/events/schemas";
 import { formatSchedule } from "@/modules/events/format";
 
@@ -19,17 +21,36 @@ export type EventDto = {
 export function EventCard({
   event,
   timeZone,
+  onChanged,
 }: {
   event: EventDto;
   timeZone: string;
   onChanged?: () => void;
 }) {
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState("");
   const typeLabel = event.type
     ? (eventTypeLabels[event.type as keyof typeof eventTypeLabels] ??
       event.type)
     : null;
   const archived = Boolean(event.archivedAt);
   const place = [event.venueName, event.address].filter(Boolean).join(", ");
+
+  async function restore() {
+    if (pending || !archived) return;
+    setPending(true);
+    setError("");
+    try {
+      const response = await tabFetch(`/api/events/${event.id}/restore`, {
+        method: "POST",
+      });
+      if (!response.ok) throw new Error();
+      onChanged?.();
+    } catch {
+      setError("Couldn't restore this event.");
+      setPending(false);
+    }
+  }
 
   return (
     <article
@@ -65,7 +86,16 @@ export function EventCard({
           >
             View details
           </Link>
-          {archived ? null : (
+          {archived ? (
+            <button
+              type="button"
+              onClick={() => void restore()}
+              disabled={pending}
+              className="rounded-lg bg-[#6d213c] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#51182d] disabled:opacity-60"
+            >
+              {pending ? "Restoring…" : "Restore"}
+            </button>
+          ) : (
             <Link
               href={`/account/wedding/events/${event.id}/edit`}
               className="rounded-lg bg-[#6d213c] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#51182d]"
@@ -75,6 +105,11 @@ export function EventCard({
           )}
         </div>
       </div>
+      {error ? (
+        <p role="alert" className="mt-3 text-xs text-rose-700">
+          {error}
+        </p>
+      ) : null}
       {place ? <p className="mt-4 text-sm text-[#252126]">📍 {place}</p> : null}
       {event.dressCode ? (
         <p className="mt-1 text-sm text-[#252126]">

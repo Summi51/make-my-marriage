@@ -87,8 +87,6 @@ export function WorkspaceSidebar({
           name: "Expenses",
           href: "/account/wedding/expenses",
           icon: "currency-rupee",
-          badge: "Soon",
-          disabled: true,
         },
         {
           name: "My Vendors",

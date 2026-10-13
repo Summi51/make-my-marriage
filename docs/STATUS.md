@@ -96,6 +96,7 @@ Foundation, the public homepage, database infrastructure, account authentication
 
 - Event model, Zod schemas, and use-cases scoped by wedding id (`src/modules/events/`). Create, list, get, update, and archive (soft delete via `archivedAt`), matching `API_DESIGN.md`.
 - API routes: `GET/POST /api/events`, `GET/PATCH/DELETE /api/events/:eventId`.
+- Restore returns an archived event to the active itinerary through `POST /api/events/:eventId/restore`. Linked guests, tasks, expenses, and photos keep the same event id. Permanent delete is not offered.
 - Events list page grouped by day with wine/ivory styling and Cormorant Garamond headings, matching the Stitch design. Empty state with three feature tiles and a call to add the first event.
 - Add event page with three sections (Event details, Date & time, Venue & details), validation, and redirect back to the list on success.
 - Sidebar "Events" link already routed to this page.
@@ -203,9 +204,9 @@ Foundation, the public homepage, database infrastructure, account authentication
 
 ### Wedding gallery photo storage
 
-- Signed-in Admin and Manager members can upload JPEG, PNG, and WebP photos, up to 10 MB each and 20 at a time, from `/account/wedding/gallery`.
-- The browser uploads directly to a private Cloudflare R2 staging key. The server checks the stored size, type, and image signature, then copies the photo to a final private key before it appears in the gallery.
-- Photos stay scoped to the signed-in wedding. A wedding can keep 2,000 ready photos or 5 GB, whichever comes first. Expired unfinished uploads are removed before the next upload link, and only after their staging file is deleted.
+- Signed-in Admin and Manager members can upload JPEG, PNG, and WebP photos, up to 4 MB each and 20 at a time, from `/account/wedding/gallery`.
+- The browser tries a direct upload to a private Cloudflare R2 staging key. If that fails, the same photo is sent through the app and checked before it is stored. The server then checks the stored size, type, and image signature, and copies the photo to a final private key before it appears in the gallery.
+- Photos stay scoped to the signed-in wedding. The free R2 account is shared, so every wedding together can keep 2,000 photos or 8 GB, and 400 new uploads a day. A full account or a used daily allowance blocks the next upload. Photos already saved stay viewable. Expired unfinished uploads are removed before the next upload link, and only after their staging file is deleted.
 - The gallery loads one page of 24 photos. Load more fetches the next page of the open album. Download uses a short-lived private link. Delete removes the stored photo and hides it from the gallery.
 - Download Zip collects the open album, not only the page on screen, and stops at 100 MB. R2 must allow browser GET for that download.
 - Guest gallery links and QR sharing are not part of this step.
@@ -219,14 +220,24 @@ Foundation, the public homepage, database infrastructure, account authentication
 - Pinned modal footer with count-aware batch delivery trigger.
 - Supported in backend use-case `batchSendReminders` with custom subjects and template styles.
 
+### Wedding expenses ledger and finance tracker
+
+- Full production-grade Expenses feature implemented at `/account/wedding/expenses` matching the Stitch atelier layout and workspace design.
+- Backend domain module in `src/modules/expenses/` with Mongoose model `Expense`, Zod schemas, and use-cases (`listExpenses`, `createExpense`, `getExpense`, `updateExpense`, `deleteExpense`, `getExpenseSummary`).
+- Exact tenant boundary enforcement: all records, queries, and summaries are strictly scoped to the authenticated member's `weddingId`. Amounts stored in integer `amountPaise` to eliminate floating-point rounding errors.
+- Support for 13 official wedding categories: `VENUE`, `CATERING`, `PHOTOGRAPHY`, `VIDEOGRAPHY`, `DECORATION`, `CLOTHING`, `JEWELLERY`, `ENTERTAINMENT`, `INVITATIONS`, `GIFTS`, `TRAVEL`, `MAKEUP`, `OTHER`.
+- Optional ceremony linking (`eventId`); vendor linking remains deferred until Vendors exists.
+- Endpoints: `GET /api/expenses`, `POST /api/expenses`, `GET /api/expenses/summary`, `GET /api/expenses/[expenseId]`, `PATCH /api/expenses/[expenseId]`, `DELETE /api/expenses/[expenseId]`.
+- Frontend client component with empty state, financial overview, category breakdown, transaction ledger, search and ceremony filtering, CSV export, add/edit modal, and delete confirmation. Structured payment types distinguish advances from full, part, and final payments; balances and budgets remain deferred.
+- Workspace sidebar navigation item activated under `FINANCE & VENDORS` -> `Expenses`.
+- Main dashboard (`/account`) synchronized with real live `expenseSummary`.
+
 ## Not started
 
 - Password recovery.
 - Permanent event deletion (archiving is the only removal path).
-- Functional backing domain modules for expenses, vendors, website and livestream.
+- Functional backing domain modules for vendors, website and livestream.
 
 ## Next
 
-Gallery follow-up is implemented: event albums, paged refresh, missing-object reconciliation, confirmed deletion, a 2,000-photo or 5 GB wedding cap, and browser ZIP downloads of the open album up to 100 MB. R2 GET CORS is still required for ZIP downloads.
-
-Domain implementation for the next active workspace module (Finance & Expenses or Vendors).
+- Domain implementation for the next active workspace module (Vendors: My Vendors and Discover Vendors).

@@ -2,6 +2,14 @@
 
 ## Accepted foundation decisions
 
+- Expense payment types (2026-10-13): An expense row records an amount
+  actually paid, with a structured `paymentKind` of `PAID`, `ADVANCE`,
+  `PARTIAL`, or `FINAL`. The total includes all of these amounts exactly
+  once. This narrows the older PRD phrase “spent or committed”: unpaid
+  commitments cannot be represented as paid expenses. It does not introduce
+  installment schedules, vendor balances, budgets, or payment processing;
+  those remain deferred.
+
 - Gallery follow-up (2026-10-12): the requested ZIP download expands the initial
   single-download scope. Build ZIPs in the browser from private signed URLs with
   a 100 MiB album limit, preserving the direct-to-R2 architecture. Refresh checks
@@ -9,6 +17,21 @@
   Each wedding may store 2,000 ready photos or 5 GiB, whichever comes first.
   Expired pending staging objects for that wedding are deleted before the next
   upload link is issued. The gallery loads one album page at a time.
+
+- Free R2 gallery cap (2026-10-13): the live account stays on Cloudflare R2's
+  free allowance (10 GB storage, 1 million Class A and 10 million Class B
+  operations a month). The quoted 100,000 requests/day and 10 ms CPU limits are
+  Cloudflare Workers limits, not R2, and this app does not put uploads through a
+  Worker. The 2026-10-12 per-wedding 2,000-photo or 5 GiB cap is superseded:
+  the whole account may keep 2,000 ready or pending photos or 8 GiB, whichever
+  comes first, and 400 new uploads a day. A full account or a used daily
+  allowance rejects the next upload; already saved photos stay viewable.
+  Each photo is 4 MB or smaller so the same-origin fallback fits Amplify's
+  request-body ceiling when browser-to-R2 CORS is unavailable. Gallery listing
+  signs URLs from metadata and no longer HEADs every tile. Download still
+  checks the object and tombstones a confirmed missing file. Direct upload
+  remains the first attempt; the same-origin fallback is the production path
+  until bucket CORS can be edited.
 
 - Use one deployable Next.js full-stack application at the repository root.
 - Use TypeScript, App Router Route Handlers and REST.
@@ -47,6 +70,7 @@
 
 - Workspace navigation and dashboard cards render sections whose routes do not exist yet (guests, invitations & RSVP, expenses, vendors, website, gallery, guest QR, livestream) as non-clickable "Soon" items instead of links, so the design preview never sends a member to a 404. Each entry becomes a real link when its module ships.
 - Task due dates are date-only. `POST`/`PATCH /api/tasks` stores the UTC instant of midnight in `Wedding.timeZone`, as `API_DESIGN.md` requires, so the saved day matches the day the member chose in every supported time zone. Storing plain UTC midnight shifted the day backwards in time zones behind UTC and moved it again on each edit.
+- Events are archived, not hard-deleted, because tasks, guests, expenses, and photos keep the event id. Archive is reversible: `POST /api/events/:eventId/restore` clears `archivedAt` and returns the same record to the active itinerary. Permanent delete is not offered, even for unused events, because a missed reference would leave a dangling link. `PRD.md` says events should be deletable; the newer archive rule in `DATABASE_DESIGN.md` and `API_DESIGN.md` is the one implemented.
 
 ## Wedding guests milestone decisions
 

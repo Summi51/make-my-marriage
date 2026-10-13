@@ -1102,8 +1102,11 @@ Archived events:
 - Do not appear in normal planning views
 - Do not appear in future invitations
 - Preserve existing relationships
+- Can be restored by clearing `archivedAt`
 
-This is safer than cascading deletion across many collections.
+This is safer than cascading deletion across many collections. A restored event
+keeps the same id, so existing guest, task, expense, and photo links become
+active again without being rewritten.
 
 ---
 
@@ -1632,6 +1635,8 @@ Expense {
 
     currency: "INR",
 
+    paymentKind: "PAID" | "ADVANCE" | "PARTIAL" | "FINAL",
+
     expenseDate: Date,
 
     category: String,
@@ -1711,6 +1716,8 @@ Recommended:
 index(weddingId, expenseDate)
 
 index(weddingId, category)
+
+index(weddingId, paymentKind)
 
 index(weddingId, eventId)
 

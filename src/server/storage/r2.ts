@@ -119,6 +119,28 @@ export async function signUpload(
   }
 }
 
+export async function uploadObjectDirect(
+  key: string,
+  body: Buffer | Uint8Array,
+  contentType: string,
+) {
+  try {
+    const { client: s3, bucket } = client();
+    await s3.send(
+      new PutObjectCommand({
+        Bucket: bucket,
+        Key: key,
+        ContentType: contentType,
+        ContentLength: body.length,
+        Body: body,
+      }),
+    );
+  } catch (error) {
+    if (error instanceof WeddingError) throw error;
+    throw unavailable();
+  }
+}
+
 export async function inspectObject(key: string): Promise<StoredObject> {
   try {
     const { client: s3, bucket } = client();

@@ -60,6 +60,29 @@ interface WeddingHomeProps {
     notAttendingInvitations: number;
     totalPeopleAttending: number;
   };
+  expenseSummary?: {
+    totalExpensePaise: number;
+    totalExpenseRupees: number;
+    currency: string;
+    totalTransactions: number;
+    byCategory: Array<{
+      category: string;
+      amountPaise: number;
+      amountRupees: number;
+      percentage: number;
+      count: number;
+    }>;
+  };
+}
+
+function formatIndianRupees(rupees: number): string {
+  const parts = Math.round(rupees).toString();
+  if (parts.length <= 3) return `₹${parts}`;
+  const lastThree = parts.substring(parts.length - 3);
+  const otherNumbers = parts.substring(0, parts.length - 3);
+  const formatted =
+    otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + "," + lastThree;
+  return `₹${formatted}`;
 }
 
 export function WeddingHome({
@@ -73,6 +96,13 @@ export function WeddingHome({
     attendingInvitations: 0,
     notAttendingInvitations: 0,
     totalPeopleAttending: 0,
+  },
+  expenseSummary = {
+    totalExpensePaise: 0,
+    totalExpenseRupees: 0,
+    currency: "INR",
+    totalTransactions: 0,
+    byCategory: [],
   },
 }: WeddingHomeProps) {
   const place =
@@ -230,12 +260,18 @@ export function WeddingHome({
     },
     {
       title: "Total expenses",
-      value: "₹12,45,000",
-      subtext: "Across your wedding categories",
+      value:
+        expenseSummary.totalTransactions > 0
+          ? formatIndianRupees(expenseSummary.totalExpenseRupees)
+          : "₹0",
+      subtext:
+        expenseSummary.totalTransactions > 0
+          ? `${expenseSummary.totalTransactions} recorded payments`
+          : "Track costs across ceremonies",
       link: "/account/wedding/expenses",
-      linkText: "Coming soon →",
-      isSample: true,
-      soon: true,
+      linkText: "Manage expenses →",
+      isSample: false,
+      soon: false,
       icon: (
         <svg
           className="h-5 w-5 text-[#a67341]"
@@ -825,82 +861,73 @@ export function WeddingHome({
             <div className="flex flex-wrap items-start justify-between gap-2 border-b border-[#f1ede8] pb-4">
               <div>
                 <span className="text-[10px] font-bold tracking-[0.16em] text-[#8a7267] uppercase">
-                  SAMPLE DATA · PREVIEW
+                  {expenseSummary.totalTransactions > 0
+                    ? `${expenseSummary.totalTransactions} PAYMENTS RECORDED`
+                    : "FINANCE & ACCOUNTS"}
                 </span>
                 <h2 className="font-editorial mt-0.5 text-xl font-semibold text-[#1e1a1f]">
                   Wedding expenses
                 </h2>
               </div>
-              <span className="text-xs font-semibold text-[#a89ea1]">
-                Coming soon
-              </span>
+              <Link
+                href="/account/wedding/expenses"
+                className="text-xs font-semibold text-[#6d213c] transition hover:underline"
+              >
+                {expenseSummary.totalTransactions > 0
+                  ? "View ledger →"
+                  : "Start tracking →"}
+              </Link>
             </div>
 
             <div className="mt-4">
               <p className="font-editorial text-2xl font-bold tracking-tight text-[#1e1a1f] sm:text-3xl">
-                ₹12,45,000
+                {formatIndianRupees(expenseSummary.totalExpenseRupees)}
               </p>
               <p className="text-[11px] text-[#867276]">
-                Estimated and logged across celebrations
+                {expenseSummary.totalTransactions > 0
+                  ? "Logged across ceremonies and vendor payments"
+                  : "No expenses logged yet · Click to add your first expense"}
               </p>
 
               {/* Category Breakdown */}
               <div className="mt-4 space-y-2.5 text-xs">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex min-w-0 items-center gap-2">
-                    <span className="h-2 w-2 shrink-0 rounded-full bg-[#5c1a33]" />
-                    <span className="truncate text-[#54474b]">
-                      Venue & Courtyard
-                    </span>
+                {expenseSummary.byCategory.length > 0 ? (
+                  expenseSummary.byCategory.slice(0, 5).map((cat, i) => (
+                    <div
+                      key={cat.category}
+                      className="flex items-center justify-between gap-2"
+                    >
+                      <div className="flex min-w-0 items-center gap-2">
+                        <span
+                          className="h-2 w-2 shrink-0 rounded-full"
+                          style={{
+                            backgroundColor:
+                              i === 0
+                                ? "#5c1a33"
+                                : i === 1
+                                  ? "#8a2544"
+                                  : i === 2
+                                    ? "#b45309"
+                                    : i === 3
+                                      ? "#6d213c"
+                                      : "#e06b88",
+                          }}
+                        />
+                        <span className="truncate text-[#54474b] capitalize">
+                          {cat.category.toLowerCase()}
+                        </span>
+                      </div>
+                      <span className="shrink-0 font-semibold text-[#1e1a1f]">
+                        {formatIndianRupees(cat.amountRupees)}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="rounded-xl bg-[#FAF7F5] p-3 text-center text-xs text-[#8C837A]">
+                    Organize Venue, Catering, Decor and 10+ categories in your
+                    ledger.
                   </div>
-                  <span className="shrink-0 font-semibold text-[#1e1a1f]">
-                    ₹5,00,000
-                  </span>
-                </div>
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex min-w-0 items-center gap-2">
-                    <span className="h-2 w-2 shrink-0 rounded-full bg-[#8a2544]" />
-                    <span className="truncate text-[#54474b]">
-                      Decorations & Stage
-                    </span>
-                  </div>
-                  <span className="shrink-0 font-semibold text-[#1e1a1f]">
-                    ₹2,50,000
-                  </span>
-                </div>
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex min-w-0 items-center gap-2">
-                    <span className="h-2 w-2 shrink-0 rounded-full bg-[#b45309]" />
-                    <span className="truncate text-[#54474b]">
-                      Photography & Films
-                    </span>
-                  </div>
-                  <span className="shrink-0 font-semibold text-[#1e1a1f]">
-                    ₹1,80,000
-                  </span>
-                </div>
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex min-w-0 items-center gap-2">
-                    <span className="h-2 w-2 shrink-0 rounded-full bg-[#6d213c]" />
-                    <span className="truncate text-[#54474b]">
-                      Catering & Feast
-                    </span>
-                  </div>
-                  <span className="shrink-0 font-semibold text-[#1e1a1f]">
-                    ₹2,40,000
-                  </span>
-                </div>
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex min-w-0 items-center gap-2">
-                    <span className="h-2 w-2 shrink-0 rounded-full bg-[#e06b88]" />
-                    <span className="truncate text-[#54474b]">
-                      Entertainment & Qawwali
-                    </span>
-                  </div>
-                  <span className="shrink-0 font-semibold text-[#1e1a1f]">
-                    ₹75,000
-                  </span>
-                </div>
+                )}
               </div>
             </div>
           </section>

@@ -16,6 +16,7 @@ vi.mock("@/server/storage/r2", () => ({
   inspectObject: vi.fn(),
   readSignature: vi.fn(),
   signUpload: vi.fn(),
+  uploadObjectDirect: vi.fn(),
 }));
 vi.mock("./models", () => ({
   Photo: {
@@ -39,13 +40,17 @@ import {
   inspectObject,
   readSignature,
   signUpload,
+  uploadObjectDirect,
 } from "@/server/storage/r2";
+import { AuthError } from "@/modules/auth/errors";
+import { consumeLimit } from "@/server/auth/rate-limit";
 import {
   listPhotos,
   deletePhoto,
   downloadPhoto,
   reserveUpload,
   confirmUpload,
+  uploadStagingFallback,
 } from "./use-cases";
 
 const weddingId = new Types.ObjectId().toString();
@@ -83,19 +88,18 @@ describe("gallery storage reconciliation and tenant isolation", () => {
     });
     expect(result.data[0].eventId).toBe(String(eventId));
   });
-  it("hides and tombstones objects confirmed missing from R2", async () => {
-    vi.mocked(objectExists).mockResolvedValue(false);
+  it("signs gallery tiles from metadata without a storage existence check", async () => {
     const result = await listPhotos(weddingId, { limit: 24 });
-    expect(result.data).toEqual([]);
-    expect(Photo.updateOne).toHaveBeenCalledWith(
-      expect.objectContaining({ weddingId, _id: row._id }),
-      { $set: { status: "DELETED" } },
-    );
-    expect(signRead).not.toHaveBeenCalled();
+    expect(result.data).toHaveLength(1);
+    expect(result.data[0].url).toBe("signed-private-url");
+    expect(objectExists).not.toHaveBeenCalled();
+    expect(Photo.updateOne).not.toHaveBeenCalled();
+    expect(signRead).toHaveBeenCalledWith(row.objectKey);
   });
-  it("does not tombstone metadata when storage is unavailable", async () => {
-    vi.mocked(objectExists).mockRejectedValue(new Error("unavailable"));
+  it("does not tombstone metadata when a gallery tile cannot be signed", async () => {
+    vi.mocked(signRead).mockRejectedValue(new Error("unavailable"));
     await expect(listPhotos(weddingId, { limit: 24 })).rejects.toThrow();
+    expect(objectExists).not.toHaveBeenCalled();
     expect(Photo.updateOne).not.toHaveBeenCalled();
   });
   it("keeps metadata when a requested deletion fails", async () => {
@@ -255,7 +259,7 @@ describe("photo upload confirmation", () => {
     expect(Photo.updateOne).not.toHaveBeenCalled();
   });
 
-  it("does not reserve another upload when the wedding gallery is full", async () => {
+  it("does not reserve another upload when free account storage is full", async () => {
     vi.mocked(Photo.aggregate).mockResolvedValue([
       { photos: 2000, bytes: 100 },
     ] as never);
@@ -269,5 +273,44 @@ describe("photo upload confirmation", () => {
     ).rejects.toMatchObject({ status: 409 });
     expect(signUpload).not.toHaveBeenCalled();
     expect(Event.findOne).not.toHaveBeenCalled();
+  });
+
+  it("does not store a fallback file that is not a photo", async () => {
+    vi.mocked(Photo.findOne).mockResolvedValue(pending as never);
+    await expect(
+      uploadStagingFallback(
+        weddingId,
+        membershipId,
+        pending.uploadKey,
+        Buffer.from("not-a-photo"),
+      ),
+    ).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+    expect(uploadObjectDirect).not.toHaveBeenCalled();
+  });
+
+  it("stops new uploads when the free daily allowance is used", async () => {
+    vi.mocked(consumeLimit).mockImplementation(async (key: string) => {
+      if (key === "photos:account:day") {
+        throw new AuthError(
+          "RATE_LIMITED",
+          "Too many attempts. Please try again later.",
+          429,
+        );
+      }
+    });
+    await expect(
+      reserveUpload(weddingId, membershipId, {
+        filename: "guest.png",
+        mimeType: "image/png",
+        sizeBytes: png.length,
+        eventId: null,
+      }),
+    ).rejects.toMatchObject({
+      status: 429,
+      message:
+        "Today's free upload allowance is used. Try again tomorrow, or delete photos you no longer need.",
+    });
+    expect(signUpload).not.toHaveBeenCalled();
+    expect(Photo.create).not.toHaveBeenCalled();
   });
 });

@@ -65,9 +65,14 @@ export function MembersPageClient({
   const [revoking, setRevoking] = useState(false);
   const [revokeError, setRevokeError] = useState("");
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setLoadError(false);
+  const loadingRef = useRef(false);
+  const load = useCallback(async (background = false) => {
+    if (loadingRef.current) return;
+    loadingRef.current = true;
+    if (!background) {
+      setLoading(true);
+      setLoadError(false);
+    }
     try {
       const [memberResponse, invitationResponse] = await Promise.all([
         tabFetch("/api/members", { cache: "no-store" }),
@@ -80,9 +85,11 @@ export function MembersPageClient({
       ]);
       setMembers(memberResult.data);
       setInvitations(invitationResult.data);
+      setLoadError(false);
     } catch {
-      setLoadError(true);
+      if (!background) setLoadError(true);
     } finally {
+      loadingRef.current = false;
       setLoading(false);
     }
   }, []);
@@ -106,14 +113,19 @@ export function MembersPageClient({
     void load();
   }, [load]);
   useEffect(() => {
+    // An accepted invitation happens in another browser. Refresh when this
+    // tab becomes visible again, not on a timer.
+    const refresh = () => void load(true);
     const refreshWhenVisible = () => {
-      if (document.visibilityState === "visible") void load();
+      if (document.visibilityState === "visible") refresh();
     };
     document.addEventListener("visibilitychange", refreshWhenVisible);
     window.addEventListener("focus", refreshWhenVisible);
+    window.addEventListener("pageshow", refresh);
     return () => {
       document.removeEventListener("visibilitychange", refreshWhenVisible);
       window.removeEventListener("focus", refreshWhenVisible);
+      window.removeEventListener("pageshow", refresh);
     };
   }, [load]);
   useEffect(() => {

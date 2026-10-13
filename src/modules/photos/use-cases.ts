@@ -13,18 +13,26 @@ import {
   readSignature,
   signRead,
   signUpload,
+  uploadObjectDirect,
 } from "@/server/storage/r2";
 import { Photo } from "./models";
-import type {
-  confirmPhotoSchema,
-  listPhotosQuerySchema,
-  uploadUrlSchema,
+import {
+  MAX_ACCOUNT_READY_BYTES,
+  MAX_ACCOUNT_READY_PHOTOS,
+  MAX_ACCOUNT_UPLOADS_PER_DAY,
+  MAX_PHOTO_BYTES,
+  type confirmPhotoSchema,
+  type listPhotosQuerySchema,
+  type uploadUrlSchema,
 } from "./schemas";
 import type { z } from "zod";
 
 const CONFIRM_GRACE_MS = 24 * 60 * 60 * 1000;
-const MAX_READY_PHOTOS = 2000;
-const MAX_READY_BYTES = 5 * 1024 * 1024 * 1024;
+const DAY_MS = 24 * 60 * 60 * 1000;
+const FULL_MESSAGE =
+  "Free photo storage is full. Delete some photos before uploading more.";
+const DAILY_MESSAGE =
+  "Today's free upload allowance is used. Try again tomorrow, or delete photos you no longer need.";
 
 const signatures: Record<string, (bytes: Buffer) => boolean> = {
   "image/jpeg": (bytes) =>
@@ -91,12 +99,13 @@ async function sweepExpiredStaging(weddingId: string) {
   }
 }
 
-async function assertStorageRoom(weddingId: string, incomingBytes: number) {
+async function assertStorageRoom(incomingBytes: number) {
+  // One free R2 bucket serves every wedding. Count the whole account, not one wedding.
   const [usage] = await Photo.aggregate<{
     photos: number;
     bytes: number;
   }>([
-    { $match: { weddingId: new Types.ObjectId(weddingId), status: "READY" } },
+    { $match: { status: { $in: ["READY", "PENDING"] } } },
     {
       $group: {
         _id: null,
@@ -106,15 +115,15 @@ async function assertStorageRoom(weddingId: string, incomingBytes: number) {
     },
   ]);
   if (
-    (usage?.photos ?? 0) >= MAX_READY_PHOTOS ||
-    (usage?.bytes ?? 0) + incomingBytes > MAX_READY_BYTES
+    (usage?.photos ?? 0) >= MAX_ACCOUNT_READY_PHOTOS ||
+    (usage?.bytes ?? 0) + incomingBytes > MAX_ACCOUNT_READY_BYTES
   ) {
-    throw new WeddingError(
-      "CONFLICT",
-      "This wedding gallery is full. Delete some photos before uploading more.",
-      409,
-    );
+    throw new WeddingError("CONFLICT", FULL_MESSAGE, 409);
   }
+}
+
+function photoSignature(mimeType: string, bytes: Buffer) {
+  return signatures[mimeType]?.(bytes) ?? false;
 }
 
 export async function reserveUpload(
@@ -125,9 +134,34 @@ export async function reserveUpload(
   await connectToDatabase();
   const eventId = await activeEvent(weddingId, input.eventId);
   await sweepExpiredStaging(weddingId);
-  await assertStorageRoom(weddingId, input.sizeBytes);
+  if (input.sizeBytes > MAX_PHOTO_BYTES) {
+    throw new WeddingError(
+      "VALIDATION_ERROR",
+      "Each photo must be 4 MB or smaller.",
+      400,
+    );
+  }
+  await assertStorageRoom(input.sizeBytes);
   await consumeLimit(`photos:member:${membershipId}`, 120);
   await consumeLimit(`photos:wedding:${weddingId}`, 600);
+  try {
+    await consumeLimit(
+      "photos:account:day",
+      MAX_ACCOUNT_UPLOADS_PER_DAY,
+      Date.now(),
+      DAY_MS,
+    );
+  } catch (error) {
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      error.code === "RATE_LIMITED"
+    ) {
+      throw new WeddingError("RATE_LIMITED", DAILY_MESSAGE, 429);
+    }
+    throw error;
+  }
   const uploadKey = createObjectKey(weddingId, "staging");
   const signed = await signUpload(uploadKey, input.mimeType, input.sizeBytes);
   await Photo.create({
@@ -148,6 +182,47 @@ export async function reserveUpload(
     objectKey: uploadKey,
     expiresAt: signed.expiresAt,
   };
+}
+
+export async function uploadStagingFallback(
+  weddingId: string,
+  membershipId: string,
+  objectKey: string,
+  body: Buffer,
+) {
+  await connectToDatabase();
+  const pending = await Photo.findOne({
+    weddingId,
+    uploadKey: objectKey,
+    uploadedByMembershipId: membershipId,
+    status: "PENDING",
+  });
+  if (!pending) {
+    throw new WeddingError("NOT_FOUND", "That upload was not found.", 404);
+  }
+  if (pending.expiresAt.getTime() + CONFIRM_GRACE_MS < Date.now()) {
+    throw new WeddingError(
+      "VALIDATION_ERROR",
+      "That upload expired. Choose the photo again.",
+      400,
+    );
+  }
+  if (body.length !== pending.sizeBytes || body.length > MAX_PHOTO_BYTES) {
+    throw new WeddingError(
+      "VALIDATION_ERROR",
+      "That upload does not match the photo you chose.",
+      400,
+    );
+  }
+  if (!photoSignature(pending.mimeType, body.subarray(0, 16))) {
+    throw new WeddingError(
+      "VALIDATION_ERROR",
+      "That file is not a JPEG, PNG, or WebP photo.",
+      400,
+    );
+  }
+  await uploadObjectDirect(pending.uploadKey, body, pending.mimeType);
+  return { success: true };
 }
 
 export async function confirmUpload(
@@ -301,30 +376,13 @@ export async function listPhotos(
           }),
         ).toString("base64url")
       : null;
-  const data = [];
-  // Bound storage concurrency to each page; don't trust Mongo metadata alone
-  // when an operator may have removed an object directly in R2.
-  for (let offset = 0; offset < page.length; offset += 6) {
-    const checked = await Promise.all(
-      page.slice(offset, offset + 6).map(async (photo) => ({
-        photo,
-        exists: await objectExists(photo.objectKey),
-      })),
-    );
-    for (const { photo, exists } of checked) {
-      if (exists) data.push(toPhotoDto(photo, await signRead(photo.objectKey)));
-      else
-        await Photo.updateOne(
-          {
-            _id: photo._id,
-            weddingId,
-            objectKey: photo.objectKey,
-            status: "READY",
-          },
-          { $set: { status: "DELETED" } },
-        );
-    }
-  }
+  // Sign from metadata. A HEAD plus a signed GET for every tile would burn the
+  // free R2 read allowance on each gallery open. Download still checks the object.
+  const data = await Promise.all(
+    page.map(async (photo) =>
+      toPhotoDto(photo, await signRead(photo.objectKey)),
+    ),
+  );
   const total = await Photo.countDocuments(filter);
   return { data, pagination: { nextCursor, total } };
 }

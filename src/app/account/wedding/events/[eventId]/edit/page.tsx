@@ -44,7 +44,8 @@ export default async function EditEventPage({
             This event is archived.
           </h1>
           <p className="mt-3 text-sm text-[#676169]">
-            Archived events are read-only and stay out of the active itinerary.
+            Archived events are read-only. Restore the event from its details
+            page to edit it again.
           </p>
           <Link
             href={`/account/wedding/events/${event.id}?tab=${encodeURIComponent(tab)}`}
