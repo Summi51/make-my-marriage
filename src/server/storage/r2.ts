@@ -29,13 +29,25 @@ type R2Config = {
 
 let cached: { key: string; client: S3Client; bucket: string } | null = null;
 
+function setting(value: string | undefined) {
+  const trimmed = value?.trim() ?? "";
+  if (
+    trimmed.length >= 2 &&
+    ((trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+      (trimmed.startsWith("'") && trimmed.endsWith("'")))
+  ) {
+    return trimmed.slice(1, -1);
+  }
+  return trimmed;
+}
+
 function requireConfig(
   source: Record<string, string | undefined> = process.env,
 ): R2Config {
-  const accountId = source.R2_ACCOUNT_ID?.trim() ?? "";
-  const accessKeyId = source.R2_ACCESS_KEY_ID?.trim() ?? "";
-  const secretAccessKey = source.R2_SECRET_ACCESS_KEY?.trim() ?? "";
-  const bucket = source.R2_BUCKET_NAME?.trim() ?? "";
+  const accountId = setting(source.R2_ACCOUNT_ID);
+  const accessKeyId = setting(source.R2_ACCESS_KEY_ID);
+  const secretAccessKey = setting(source.R2_SECRET_ACCESS_KEY);
+  const bucket = setting(source.R2_BUCKET_NAME);
   if (!accountId || !accessKeyId || !secretAccessKey || !bucket) {
     throw new WeddingError(
       "STORAGE_UNAVAILABLE",
