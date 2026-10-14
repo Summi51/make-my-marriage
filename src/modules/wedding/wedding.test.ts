@@ -22,8 +22,18 @@ import {
   PATCH as updateMemberRoute,
   DELETE as removeMemberRoute,
 } from "@/app/api/members/[membershipId]/route";
+import {
+  GET as getWebsiteRoute,
+  PATCH as updateWebsiteRoute,
+} from "@/app/api/wedding/website/route";
+import { GET as getPublicWeddingRoute } from "@/app/api/public/weddings/[slug]/route";
+import {
+  GET as getLivestreamRoute,
+  PATCH as updateLivestreamRoute,
+} from "@/app/api/wedding/livestream/route";
 import { User } from "@/modules/auth/models";
 import { Wedding, WeddingMembership } from "./models";
+import { Event } from "@/modules/events/models";
 
 const origin = "http://localhost:3000";
 const wedding = {
@@ -70,6 +80,7 @@ describe("wedding API", () => {
       User.deleteMany({}),
       Wedding.deleteMany({}),
       WeddingMembership.deleteMany({}),
+      Event.deleteMany({}),
       mongoose.connection.collection("auth_rate_limits").deleteMany({}),
     ]);
   });
@@ -272,4 +283,193 @@ describe("wedding API", () => {
       expect(String(extra._id)).toBeTruthy();
     },
   );
+
+  it("manages wedding website settings and public website access", async () => {
+    const owner = await signUp("website-test@example.com");
+    await createWeddingRoute(
+      weddingRequest("POST", "/api/wedding", owner, {
+        ...wedding,
+        brideName: "Saman",
+        groomName: "Hasan",
+      }),
+    );
+    const createdRes = await getWeddingRoute(
+      weddingRequest("GET", "/api/wedding", owner),
+    );
+    const slug = (await createdRes.json()).data.website.slug;
+    expect(slug).toBeTruthy();
+
+    // 1. Initial website settings
+    const initialSiteRes = await getWebsiteRoute(
+      weddingRequest("GET", "/api/wedding/website", owner),
+    );
+    expect(initialSiteRes.status).toBe(200);
+    const initialSite = (await initialSiteRes.json()).data;
+    expect(initialSite.theme).toBe("CLASSIC");
+    expect(initialSite.isPublished).toBe(false);
+    expect(initialSite.slug).toBe(slug);
+
+    // 2. Public route returns 404 while unpublished
+    const publicDraftRes = await getPublicWeddingRoute(
+      new NextRequest(`${origin}/api/public/weddings/${slug}`, {
+        method: "GET",
+      }),
+      { params: Promise.resolve({ slug }) },
+    );
+    expect(publicDraftRes.status).toBe(404);
+
+    // 3. Publish and update theme & welcome message
+    const updateSiteRes = await updateWebsiteRoute(
+      weddingRequest("PATCH", "/api/wedding/website", owner, {
+        theme: "MODERN",
+        welcomeMessage: "Welcome to our celebration!",
+        isPublished: true,
+      }),
+    );
+    expect(updateSiteRes.status).toBe(200);
+    const updatedSite = (await updateSiteRes.json()).data;
+    expect(updatedSite.theme).toBe("MODERN");
+    expect(updatedSite.isPublished).toBe(true);
+    expect(updatedSite.welcomeMessage).toBe("Welcome to our celebration!");
+
+    // 4. Create an event to verify public itinerary inclusion
+    const dbWedding = await Wedding.findOne({ "website.slug": slug });
+    await Event.create({
+      weddingId: dbWedding!._id,
+      name: "Nikah Ceremony",
+      type: "CEREMONY",
+      startsAt: new Date("2027-12-18T10:00:00Z"),
+      venueName: "Grand Mosque & Banquet",
+      address: "Karachi, Pakistan",
+    });
+
+    // 5. Public route succeeds once published
+    const publicLiveRes = await getPublicWeddingRoute(
+      new NextRequest(`${origin}/api/public/weddings/${slug}`, {
+        method: "GET",
+      }),
+      { params: Promise.resolve({ slug }) },
+    );
+    expect(publicLiveRes.status).toBe(200);
+    const publicData = (await publicLiveRes.json()).data;
+    expect(publicData.brideName).toBe("Saman");
+    expect(publicData.groomName).toBe("Hasan");
+    expect(publicData.theme).toBe("MODERN");
+    expect(publicData.welcomeMessage).toBe("Welcome to our celebration!");
+    expect(publicData.events.length).toBe(1);
+    expect(publicData.events[0].name).toBe("Nikah Ceremony");
+    expect(publicLiveRes.headers.get("cache-control")).toBe("no-store");
+    expect(publicData).not.toHaveProperty("createdByUserId");
+    expect(publicData.gallery).not.toHaveProperty("tokenHash");
+    for (const input of [
+      { theme: "INVALID" },
+      { welcomeMessage: "x".repeat(1501) },
+      { slug: "changed" },
+      {},
+    ]) {
+      const invalid = await updateWebsiteRoute(
+        weddingRequest("PATCH", "/api/wedding/website", owner, input),
+      );
+      expect(invalid.status).toBe(400);
+    }
+    const anonymous = await getWebsiteRoute(
+      weddingRequest("GET", "/api/wedding/website", ""),
+    );
+    expect(anonymous.status).toBe(401);
+    await updateWebsiteRoute(
+      weddingRequest("PATCH", "/api/wedding/website", owner, {
+        isPublished: false,
+      }),
+    );
+    const hidden = await getPublicWeddingRoute(
+      new NextRequest(`${origin}/api/public/weddings/${slug}`),
+      { params: Promise.resolve({ slug }) },
+    );
+    expect(hidden.status).toBe(404);
+    const settings = await getWebsiteRoute(
+      weddingRequest("GET", "/api/wedding/website", owner),
+    );
+    expect((await settings.json()).data.slug).toBe(slug);
+  });
+
+  it("saves a YouTube livestream and hides it until the website is published", async () => {
+    const owner = await signUp("stream-test@example.com");
+    await createWeddingRoute(
+      weddingRequest("POST", "/api/wedding", owner, {
+        ...wedding,
+        brideName: "Aisha",
+        groomName: "Omar",
+      }),
+    );
+    const created = await getWeddingRoute(
+      weddingRequest("GET", "/api/wedding", owner),
+    );
+    const slug = (await created.json()).data.website.slug;
+    const initial = await getLivestreamRoute(
+      weddingRequest("GET", "/api/wedding/livestream", owner),
+    );
+    expect(initial.status).toBe(200);
+    expect((await initial.json()).data).toMatchObject({
+      youtubeUrl: null,
+      isEnabled: false,
+      videoId: null,
+    });
+
+    const invalid = await updateLivestreamRoute(
+      weddingRequest("PATCH", "/api/wedding/livestream", owner, {
+        youtubeUrl: "https://example.com/watch?v=dQw4w9WgXcQ",
+        isEnabled: true,
+      }),
+    );
+    expect(invalid.status).toBe(400);
+    const missing = await updateLivestreamRoute(
+      weddingRequest("PATCH", "/api/wedding/livestream", owner, {
+        isEnabled: true,
+      }),
+    );
+    expect(missing.status).toBe(400);
+
+    const saved = await updateLivestreamRoute(
+      weddingRequest("PATCH", "/api/wedding/livestream", owner, {
+        youtubeUrl: "https://youtu.be/dQw4w9WgXcQ",
+        isEnabled: true,
+      }),
+    );
+    expect(saved.status).toBe(200);
+    expect((await saved.json()).data.videoId).toBe("dQw4w9WgXcQ");
+
+    await updateWebsiteRoute(
+      weddingRequest("PATCH", "/api/wedding/website", owner, {
+        isPublished: true,
+      }),
+    );
+    const live = await getPublicWeddingRoute(
+      new NextRequest(`${origin}/api/public/weddings/${slug}`),
+      { params: Promise.resolve({ slug }) },
+    );
+    const liveBody = (await live.json()).data;
+    expect(liveBody.livestream).toEqual({
+      enabled: true,
+      youtubeUrl: "https://youtu.be/dQw4w9WgXcQ",
+      videoId: "dQw4w9WgXcQ",
+    });
+    expect(liveBody).not.toHaveProperty("livestream.token");
+
+    const removed = await updateLivestreamRoute(
+      weddingRequest("PATCH", "/api/wedding/livestream", owner, {
+        youtubeUrl: null,
+        isEnabled: false,
+      }),
+    );
+    expect(removed.status).toBe(200);
+    const after = await getPublicWeddingRoute(
+      new NextRequest(`${origin}/api/public/weddings/${slug}`),
+      { params: Promise.resolve({ slug }) },
+    );
+    expect((await after.json()).data.livestream.enabled).toBe(false);
+    const anonymous = await getLivestreamRoute(
+      weddingRequest("GET", "/api/wedding/livestream", ""),
+    );
+    expect(anonymous.status).toBe(401);
+  });
 });

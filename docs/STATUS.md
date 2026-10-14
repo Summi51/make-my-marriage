@@ -246,12 +246,38 @@ Foundation, the public homepage, database infrastructure, account authentication
 - `/account/wedding/vendors/discover` uses Google Places when a key is configured. Without a key, search opens a free Google Maps link instead of a hard error. Category links from My Vendors open the matching category.
 - Sidebar highlights Discover Vendors without also highlighting My Vendors.
 
+### Wedding Website & Public Guest Portal
+
+- Domain use-cases in `src/modules/wedding/` (`getWeddingWebsite`, `updateWeddingWebsite`, `getPublicWedding`) with Zod validation `updateWebsiteSchema`.
+- Workspace management screen at `/account/wedding/website`:
+  - Activated "Wedding Website" link in `WorkspaceSidebar` under `WEBSITE & MEDIA`.
+  - Real-time Draft / Live status indicator with instant toggle.
+  - Public URL display, Copy Link, WhatsApp share, and an in-browser QR code. Copy, WhatsApp, and QR use the current host and work only after Publish Website. A draft stays private; Preview Draft is the member-only view. Share actions never publish the site.
+  - Interactive theme selector for 3 predefined themes: `CLASSIC` (Royal Burgundy & Ivory / Editorial Romance), `MINIMAL` (Pure Ivory & Slate / Modern Minimalist), and `MODERN` (Festive Rose & Terracotta / Celebration Edit).
+  - Welcome message editor with character limit, presets ("Traditional & Heartfelt", "Contemporary & Joyful", "Intimate & Serene"), and live save.
+  - Bento status card for connected features (Event Itinerary, Countdown Clock, Photo Drop & Gallery, and YouTube Livestream).
+  - Responsive live device frame preview with Desktop vs. Mobile device toggle.
+- Public guest website at `/w/[slug]`:
+  - Server-rendered page with dynamic OpenGraph metadata; returns 404 if unpublished to preserve privacy.
+  - Client-side live countdown timer avoiding hydration mismatches.
+  - Theme-specific layouts and motifs (Mughal arch contour ornament for Classic, minimalist rings for Minimal, celebratory badges for Modern).
+  - Couple story / welcome note card.
+  - Celebrations schedule with dates, timings, venues, dress codes, and "View on Google Maps" direction links.
+  - Integrated YouTube livestream broadcast player when configured.
+  - Private gallery notice without member-only links or gallery tokens. Guest photo sharing and cover-photo selection remain follow-up work.
+  - Tab-aware saves, keyboard-accessible themes, shared public/preview renderer, wedding-timezone countdown and uncached public API responses.
+  - Endpoints: `GET /api/wedding/website`, `PATCH /api/wedding/website`, `GET /api/public/weddings/[slug]`.
+- Livestream settings at `/account/wedding/livestream`:
+  - `GET /api/wedding/livestream` and `PATCH /api/wedding/livestream` save a validated YouTube watch, live, embed, or youtu.be link.
+  - Members can add, update, or remove the stream. Remove sends a clear payload captured at click time, so a later edit in the URL field cannot replace the removal. The public site embeds it only when the link is valid, the stream is enabled, and the website is published.
+  - Invalid or non-YouTube links are rejected. The public response never includes gallery tokens.
+
 ## Not started
 
 - Password recovery.
 - Permanent event deletion (archiving is the only removal path).
-- Functional backing domain modules for website, guest QR live photo drops, and livestream.
+- Functional backing domain modules for guest QR live photo drops.
 
 ## Next
 
-- Wedding Website and guest live QR code experience.
+- Guest QR live photo drops.

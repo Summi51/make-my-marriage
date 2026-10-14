@@ -68,3 +68,71 @@ export const inviteMemberSchema = z.object({
   email: z.string().trim().max(254).email("Enter a valid email address."),
   role: z.enum(["ADMIN", "MANAGER"]),
 });
+
+export const websiteThemes = ["CLASSIC", "MINIMAL", "MODERN"] as const;
+
+const youtubeHosts = new Set([
+  "youtube.com",
+  "www.youtube.com",
+  "m.youtube.com",
+  "youtu.be",
+  "www.youtu.be",
+]);
+
+export function youtubeVideoId(value: string): string | null {
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    return null;
+  }
+  if (url.protocol !== "https:" || !youtubeHosts.has(url.hostname)) return null;
+  if (url.username || url.password) return null;
+  const fromPath = url.pathname.match(
+    /^\/(?:embed|live|shorts|v)\/([\w-]{11})\/?$/,
+  );
+  if (url.hostname.endsWith("youtu.be")) {
+    const id = url.pathname.match(/^\/([\w-]{11})\/?$/)?.[1] ?? null;
+    return id;
+  }
+  if (fromPath) return fromPath[1];
+  if (url.pathname === "/watch") {
+    const id = url.searchParams.get("v");
+    return id && /^[\w-]{11}$/.test(id) ? id : null;
+  }
+  return null;
+}
+
+const youtubeUrl = z
+  .string()
+  .trim()
+  .max(500)
+  .nullable()
+  .transform((value) => (value ? value : null))
+  .refine(
+    (value) => value === null || youtubeVideoId(value) !== null,
+    "Use a YouTube watch, live, or youtu.be link.",
+  );
+
+export const updateWebsiteSchema = z
+  .object({
+    theme: z.enum(websiteThemes).optional(),
+    welcomeMessage: optionalText(1500).optional(),
+    isPublished: z.boolean().optional(),
+  })
+  .refine((value) => Object.values(value).some((item) => item !== undefined), {
+    message: "Provide at least one field to update.",
+  });
+
+export const updateLivestreamSchema = z
+  .object({
+    youtubeUrl: youtubeUrl.optional(),
+    isEnabled: z.boolean().optional(),
+  })
+  .refine((value) => Object.values(value).some((item) => item !== undefined), {
+    message: "Provide at least one field to update.",
+  })
+  .refine((value) => value.isEnabled !== true || Boolean(value.youtubeUrl), {
+    message: "Add a YouTube link before turning the livestream on.",
+    path: ["youtubeUrl"],
+  });

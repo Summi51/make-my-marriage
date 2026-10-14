@@ -5,7 +5,7 @@ import { currentTabId, TAB_QUERY } from "@/lib/tab-session";
 // Public routes that are never tab-scoped. Rewriting their URL would add a
 // stray ?tab= to a shareable link and force a second full document load, which
 // shows up as the page rendering twice.
-const TAB_FREE_PREFIXES = ["/invite/"];
+const TAB_FREE_PREFIXES = ["/invite/", "/w/"];
 
 export function TabSessionBootstrap() {
   useEffect(() => {
@@ -46,7 +46,10 @@ export function TabSessionBootstrap() {
           next.hash)
       )
         return;
-      next.searchParams.set(TAB_QUERY, id!);
+      const nextTabFree = TAB_FREE_PREFIXES.some((prefix) =>
+        next.pathname.startsWith(prefix),
+      );
+      if (!nextTabFree) next.searchParams.set(TAB_QUERY, id!);
       event.preventDefault();
       event.stopImmediatePropagation();
       window.location.assign(next.href);

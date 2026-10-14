@@ -107,8 +107,6 @@ export function WorkspaceSidebar({
           name: "Wedding Website",
           href: "/account/wedding/website",
           icon: "globe",
-          badge: "Soon",
-          disabled: true,
         },
         {
           name: "Gallery",
@@ -126,8 +124,6 @@ export function WorkspaceSidebar({
           name: "Livestream",
           href: "/account/wedding/livestream",
           icon: "video-camera",
-          badge: "Soon",
-          disabled: true,
         },
       ],
     },

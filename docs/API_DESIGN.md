@@ -2394,6 +2394,20 @@ is preferable to revealing unpublished wedding existence.
 
 Authentication required.
 
+### Response
+
+```json
+{
+  "data": {
+    "youtubeUrl": null,
+    "videoId": null,
+    "isEnabled": false
+  }
+}
+```
+
+Accepted links are `https` YouTube watch, live, embed, shorts, or `youtu.be` URLs. Enabling the stream requires a valid link. Clearing uses `youtubeUrl: null` and `isEnabled: false`. The public website embeds the player only when the website is published, the stream is enabled, and the link has a valid video id.
+
 ---
 
 # 71. Update Livestream

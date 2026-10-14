@@ -9,6 +9,91 @@ const invitationSecret =
   "isolated-browser-invitation-secret-at-least-32-characters";
 let app: ChildProcess;
 let logs = "";
+test("wedding website publishes, preserves tab session, previews themes and unpublishes", async ({
+  page,
+}) => {
+  const hydrationErrors: string[] = [];
+  page.on("console", (message) => {
+    if (message.type() === "error" && /hydrat/i.test(message.text()))
+      hydrationErrors.push(message.text());
+  });
+  await page.goto("/login");
+  await expect(page).toHaveURL(/tab=/);
+  const tab = await page.evaluate(() => window.name.replace("mmm-tab-", ""));
+  const headers = { Origin: "http://localhost:3100", "x-mmm-tab": tab };
+  expect(
+    (
+      await page.request.post("/api/auth/signup", {
+        headers,
+        data: {
+          name: "Website Tester",
+          email: "website-browser@example.com",
+          password: "isolated website password",
+        },
+      })
+    ).ok(),
+  ).toBeTruthy();
+  const created = await page.request.post("/api/wedding", {
+    headers,
+    data: {
+      brideName: "Website",
+      groomName: "Tester",
+      weddingDate: "2027-12-18",
+      timeZone: "Asia/Karachi",
+      location: { formattedAddress: "Karachi, Pakistan" },
+    },
+  });
+  expect(created.ok()).toBeTruthy();
+  const slug = (await created.json()).data.website.slug;
+  await page.goto(`/account/wedding/website?tab=${tab}`);
+  await expect(page.getByText("Draft Mode (Private to You)")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Copy Link" })).toBeEnabled();
+  await expect(page.getByRole("button", { name: "WhatsApp" })).toBeEnabled();
+  await expect(page.getByRole("button", { name: "QR Code" })).toBeEnabled();
+  await page
+    .getByRole("radio")
+    .filter({ hasText: "Modern Minimalist" })
+    .click();
+  await page
+    .getByRole("textbox", { name: "Welcome message" })
+    .fill("Welcome, our dear family!");
+  await page
+    .getByRole("button", { name: "Publish Website", exact: false })
+    .click();
+  await expect(page.getByText("Your Wedding Website is Live")).toBeVisible();
+  await page.reload();
+  await expect(
+    page.getByRole("textbox", { name: "Welcome message" }),
+  ).toHaveValue("Welcome, our dear family!");
+  await expect(
+    page.getByRole("radio").filter({ hasText: "Modern Minimalist" }),
+  ).toHaveAttribute("aria-checked", "true");
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+  const publicPage = await page.context().newPage();
+  await publicPage.goto(`/w/${slug}`);
+  await expect(publicPage).toHaveURL(`http://localhost:3100/w/${slug}`);
+  await expect(
+    publicPage.getByRole("heading", { name: "Website & Tester" }),
+  ).toBeVisible();
+  await expect(
+    publicPage.getByText("All timings are in Asia/Karachi."),
+  ).toBeVisible();
+  await expect(
+    publicPage.locator('a[href="/account/wedding/gallery"]'),
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "Switch to Draft" }).click();
+  await expect(page.getByText("Draft Mode (Private to You)")).toBeVisible();
+  expect(
+    (await page.request.get(`/api/public/weddings/${slug}`)).status(),
+  ).toBe(404);
+  await publicPage.close();
+  expect(hydrationErrors).toEqual([]);
+});
 test.beforeAll(async () => {
   database = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
   app = spawn(

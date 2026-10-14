@@ -1,5 +1,11 @@
 # Architecture Decisions
 
+## Wedding website publication boundaries
+
+- Publishing makes couple details, location and all active events public. Guest lists, RSVPs, member details and gallery tokens are never included. Archived events are excluded.
+- Public responses use `Cache-Control: no-store` so new requests after unpublishing cannot retrieve cached publication data. Already downloaded content cannot be recalled.
+- Private gallery enablement is not permission to publish photos. Until explicit public sharing exists, show a privacy notice instead of linking guests to a member-only dashboard. Cover-photo selection remains follow-up work.
+
 ## Accepted foundation decisions
 
 - Vendor discovery (2026-10-14): My Vendors is fully private and editable; optional Google Places Text Search displays live results without caching them. A Google result links to Maps and a member may enter their own vendor record. `DATABASE_DESIGN.md` §52 and `API_DESIGN.md` §61 previously required copying Places details into a permanent internal vendor record. Google's [Places policies](https://developers.google.com/maps/documentation/places/web-service/policies) restrict long-term storage of Places content (Place IDs are an exception), so automatic copying and `/api/vendors/from-place` are deferred until a compliant user-confirmation/data-lifecycle design is agreed. Do not silently persist Google names, addresses, ratings, or contact details from the provider. Discovery requires a server-side Places API key and may incur usage charges; it remains disabled when no key is configured. No paid service or subscription is activated by the app.

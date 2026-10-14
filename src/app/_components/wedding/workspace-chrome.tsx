@@ -72,7 +72,11 @@ export function WorkspaceChrome({
                       ? "Vendors"
                       : pathname.startsWith("/account/wedding/gallery")
                         ? "Gallery"
-                        : "Workspace";
+                        : pathname.startsWith("/account/wedding/website")
+                          ? "Wedding Website"
+                          : pathname.startsWith("/account/wedding/livestream")
+                            ? "Livestream"
+                            : "Workspace";
 
   // When no wedding is set up yet (Initial setup screen)
   if (!weddingTitle) {
@@ -130,7 +134,7 @@ export function WorkspaceChrome({
       {/* Main Content Area */}
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Top Navbar matching media_1791484052560.png */}
-        <header className="sticky top-0 z-20 border-b border-[#e8e2da] bg-white/95 backdrop-blur-xs">
+        <header className="sticky top-0 z-40 border-b border-[#e8e2da] bg-white">
           <div className="flex h-16 items-center justify-between gap-2 px-3 sm:gap-3.5 sm:px-6 lg:px-8">
             {/* Left: Breadcrumbs + Mobile menu button */}
             <div className="flex min-w-0 items-center gap-2 sm:gap-3">

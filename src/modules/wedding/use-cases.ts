@@ -8,7 +8,11 @@ import {
   createWeddingSchema,
   updateWeddingSchema,
   updateMemberRoleSchema,
+  updateWebsiteSchema,
+  updateLivestreamSchema,
+  youtubeVideoId,
 } from "./schemas";
+import { Event } from "@/modules/events/models";
 import { WeddingError } from "./errors";
 import { generateUniqueSlug, generateGalleryToken } from "./slug";
 import { connectToDatabase } from "@/server/db";
@@ -166,7 +170,7 @@ export async function updateWedding(
   const wedding = await Wedding.findOneAndUpdate(
     { _id: weddingId, deletedAt: null },
     { $set: update },
-    { returnDocument: "after" },
+    { returnDocument: "after", runValidators: true },
   ).lean();
   if (!wedding) throw new WeddingError("NOT_FOUND", "Wedding not found.", 404);
   return toWeddingDto(wedding);
@@ -268,4 +272,182 @@ export async function removeMember(weddingId: string, membershipId: string) {
   } finally {
     await session.endSession();
   }
+}
+
+export async function getWeddingWebsite(weddingId: string) {
+  await connectToDatabase();
+  const wedding = await Wedding.findOne({
+    _id: weddingId,
+    deletedAt: null,
+  }).lean();
+  if (!wedding) throw new WeddingError("NOT_FOUND", "Wedding not found.", 404);
+  return toWebsiteDto(wedding);
+}
+
+export async function updateWeddingWebsite(
+  weddingId: string,
+  input: z.infer<typeof updateWebsiteSchema>,
+) {
+  await connectToDatabase();
+  const update: Record<string, unknown> = {};
+  if (input.theme !== undefined) update["website.theme"] = input.theme;
+  if (input.welcomeMessage !== undefined)
+    update["website.welcomeMessage"] = input.welcomeMessage;
+  if (input.isPublished !== undefined)
+    update["website.isPublished"] = input.isPublished;
+
+  const wedding = await Wedding.findOneAndUpdate(
+    { _id: weddingId, deletedAt: null },
+    { $set: update },
+    { returnDocument: "after" },
+  ).lean();
+  if (!wedding) throw new WeddingError("NOT_FOUND", "Wedding not found.", 404);
+  return toWebsiteDto(wedding);
+}
+
+function toWebsiteDto(wedding: {
+  website?: {
+    slug?: string | null;
+    theme?: string | null;
+    isPublished?: boolean | null;
+    welcomeMessage?: string | null;
+  } | null;
+}) {
+  return {
+    slug: wedding.website?.slug ?? "",
+    theme: wedding.website?.theme ?? "CLASSIC",
+    isPublished: wedding.website?.isPublished ?? false,
+    welcomeMessage: wedding.website?.welcomeMessage ?? null,
+  };
+}
+
+function toLivestreamDto(wedding: {
+  livestream?: {
+    youtubeUrl?: string | null;
+    isEnabled?: boolean | null;
+  } | null;
+}) {
+  const youtubeUrl = wedding.livestream?.youtubeUrl ?? null;
+  return {
+    youtubeUrl,
+    videoId: youtubeUrl ? youtubeVideoId(youtubeUrl) : null,
+    isEnabled: wedding.livestream?.isEnabled ?? false,
+  };
+}
+
+export async function getWeddingLivestream(weddingId: string) {
+  await connectToDatabase();
+  const wedding = await Wedding.findOne({
+    _id: weddingId,
+    deletedAt: null,
+  }).lean();
+  if (!wedding) throw new WeddingError("NOT_FOUND", "Wedding not found.", 404);
+  return toLivestreamDto(wedding);
+}
+
+export async function updateWeddingLivestream(
+  weddingId: string,
+  input: z.infer<typeof updateLivestreamSchema>,
+) {
+  await connectToDatabase();
+  const current = await Wedding.findOne({
+    _id: weddingId,
+    deletedAt: null,
+  }).lean();
+  if (!current) throw new WeddingError("NOT_FOUND", "Wedding not found.", 404);
+
+  const nextUrl =
+    input.youtubeUrl !== undefined
+      ? input.youtubeUrl
+      : (current.livestream?.youtubeUrl ?? null);
+  const nextEnabled =
+    input.isEnabled !== undefined
+      ? input.isEnabled
+      : (current.livestream?.isEnabled ?? false);
+  if (nextEnabled && !nextUrl) {
+    throw new WeddingError(
+      "VALIDATION_ERROR",
+      "Add a YouTube link before turning the livestream on.",
+      400,
+    );
+  }
+
+  const update: Record<string, unknown> = {};
+  if (input.youtubeUrl !== undefined)
+    update["livestream.youtubeUrl"] = input.youtubeUrl;
+  if (input.isEnabled !== undefined)
+    update["livestream.isEnabled"] = input.isEnabled;
+  const wedding = await Wedding.findOneAndUpdate(
+    { _id: weddingId, deletedAt: null },
+    { $set: update },
+    { returnDocument: "after" },
+  ).lean();
+  if (!wedding) throw new WeddingError("NOT_FOUND", "Wedding not found.", 404);
+  return toLivestreamDto(wedding);
+}
+
+export async function getPublicWedding(
+  slug: string,
+  options?: { allowDraftForWeddingId?: string },
+) {
+  await connectToDatabase();
+  const wedding = await Wedding.findOne({
+    "website.slug": slug,
+    deletedAt: null,
+  }).lean();
+  const isMemberDraft =
+    Boolean(options?.allowDraftForWeddingId) &&
+    String(wedding?._id) === options?.allowDraftForWeddingId;
+  if (!wedding || (!wedding.website?.isPublished && !isMemberDraft)) {
+    throw new WeddingError("NOT_FOUND", "Wedding not found.", 404);
+  }
+  const stream = toLivestreamDto(wedding);
+  const publicStream =
+    stream.isEnabled && stream.videoId
+      ? {
+          enabled: true,
+          youtubeUrl: stream.youtubeUrl,
+          videoId: stream.videoId,
+        }
+      : { enabled: false, youtubeUrl: null, videoId: null };
+  const events = await Event.find({
+    weddingId: wedding._id,
+    archivedAt: null,
+  })
+    .sort({ startsAt: 1 })
+    .lean();
+
+  return {
+    brideName: wedding.brideName,
+    groomName: wedding.groomName,
+    title: wedding.title ?? null,
+    description: wedding.description ?? null,
+    weddingDate: wedding.weddingDate,
+    timeZone: wedding.timeZone,
+    location: {
+      formattedAddress: wedding.location?.formattedAddress ?? null,
+      city: wedding.location?.city ?? null,
+      state: wedding.location?.state ?? null,
+      country: wedding.location?.country ?? null,
+    },
+    coverImageUrl: null,
+    theme: wedding.website?.theme ?? "CLASSIC",
+    welcomeMessage: wedding.website?.welcomeMessage ?? null,
+    isPublished: wedding.website?.isPublished ?? false,
+    events: events.map((event) => ({
+      id: String(event._id),
+      name: event.name,
+      type: event.type ?? null,
+      startsAt: event.startsAt.toISOString(),
+      endsAt: event.endsAt ? event.endsAt.toISOString() : null,
+      venueName: event.venueName ?? null,
+      address: event.address ?? null,
+      description: event.description ?? null,
+      dressCode: event.dressCode ?? null,
+    })),
+    gallery: {
+      enabled: wedding.gallery?.isEnabled ?? false,
+    },
+    livestream: publicStream,
+  };
 }
