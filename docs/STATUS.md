@@ -267,17 +267,28 @@ Foundation, the public homepage, database infrastructure, account authentication
   - Private gallery notice without member-only links or gallery tokens. Guest photo sharing and cover-photo selection remain follow-up work.
   - Tab-aware saves, keyboard-accessible themes, shared public/preview renderer, wedding-timezone countdown and uncached public API responses.
   - Endpoints: `GET /api/wedding/website`, `PATCH /api/wedding/website`, `GET /api/public/weddings/[slug]`.
-- Livestream settings at `/account/wedding/livestream`:
+- Livestream Studio at `/account/wedding/livestream`:
   - `GET /api/wedding/livestream` and `PATCH /api/wedding/livestream` save a validated YouTube watch, live, embed, or youtu.be link.
   - Members can add, update, or remove the stream. Remove sends a clear payload captured at click time, so a later edit in the URL field cannot replace the removal. The public site embeds it only when the link is valid, the stream is enabled, and the website is published.
   - Invalid or non-YouTube links are rejected. The public response never includes gallery tokens.
+  - Interactive Live Studio Monitor with 16:9 HD casing, real-time video embed playback, and live/draft/offline status indicators.
+  - Real-time client-side YouTube URL validation with detected Video ID chip extraction. A YouTube Studio dashboard address is rejected with instructions to paste the Share link instead. Open in YouTube uses a real watch URL.
+  - Remote guest broadcasting tools: one-click prefilled WhatsApp ceremony invitation link and direct public stream URL copier.
+  - Printable and scannable Livestream QR code modal for wedding stationery and digital cards.
+  - Expandable YouTube broadcast setup guide covering stream scheduling, Unlisted privacy, and enabling embed permissions in YouTube Studio.
+  - Public website livestream section elevated with theatre framing, status badge, and "Cast or Watch on YouTube" action. The public player stays hidden until the saved YouTube link is enabled and the website is published.
+- Guest Photo QR at `/account/wedding/qr`:
+  - Studio screen matching Website & Media, with live status, a named PNG card download, printable table card, WhatsApp share, and a private gallery link.
+  - The downloaded and shared card includes the couple's name, the QR, and the album caption with the private link. On a phone, WhatsApp message shares that picture and the text together. On a computer, Chrome's share menu cannot list WhatsApp, so the button opens WhatsApp with the text and copies the QR picture to paste into that chat.
+  - `GET /api/gallery/qr` and `PATCH /api/gallery/qr` keep the same encrypted token when sharing is paused and resumed. Older weddings without a recoverable token receive one on first open.
+  - Guests open `/gallery/:token` without an account. Viewing and uploads can be paused independently. Guest uploads are tied to an httpOnly ticket for that album, so one guest cannot confirm another guest's pending upload. The public wedding site still does not expose the gallery token.
 
 ## Not started
 
 - Password recovery.
 - Permanent event deletion (archiving is the only removal path).
-- Functional backing domain modules for guest QR live photo drops.
+- Cover photo selection on the public wedding website.
 
 ## Next
 
-- Guest QR live photo drops.
+- Cover photo selection on the public wedding website.

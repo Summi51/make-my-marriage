@@ -621,36 +621,55 @@ export function PublicWebsiteClient({
             id="livestream"
             className={`scroll-mt-20 ${isMobile ? "my-8" : "my-12"}`}
           >
-            <div className="mb-4 flex items-center justify-between">
+            <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
               <div>
-                <div className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-semibold text-red-700">
+                <div className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-700 shadow-xs">
                   <span className="h-2 w-2 animate-pulse rounded-full bg-red-600" />
-                  Live Broadcast
+                  Live Ceremony Broadcast
                 </div>
                 <h2
-                  className={`mt-1 font-serif font-bold text-gray-900 ${
-                    isMobile ? "text-lg" : "text-2xl"
+                  className={`mt-2 font-serif font-bold text-gray-900 ${
+                    isMobile ? "text-xl" : "text-3xl"
                   }`}
                 >
-                  Watch Ceremony Online
+                  Watch Sacred Celebrations Online
                 </h2>
-                <p className="text-xs text-gray-500">
-                  Join our celebration remotely from anywhere in the world.
+                <p className="mt-1 text-xs text-gray-600 sm:text-sm">
+                  Join our wedding celebrations remotely from anywhere across
+                  the globe.
                 </p>
               </div>
+
+              <a
+                href={`https://www.youtube.com/watch?v=${youtubeId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`inline-flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3.5 py-2 font-medium text-gray-700 shadow-xs transition hover:bg-gray-50 hover:text-[#6d213c] ${
+                  isMobile ? "text-[11px]" : "text-xs"
+                }`}
+              >
+                <span>Cast or Watch on YouTube</span>
+                <span>↗</span>
+              </a>
             </div>
 
-            <div className="overflow-hidden rounded-2xl border border-black/10 bg-black shadow-lg">
+            <div className="overflow-hidden rounded-2xl border border-black/10 bg-black shadow-2xl ring-1 ring-black/5">
               <div className="relative aspect-video w-full">
                 <iframe
-                  src={`https://www.youtube.com/embed/${youtubeId}`}
+                  src={`https://www.youtube-nocookie.com/embed/${youtubeId}?rel=0`}
                   title="Wedding Livestream Broadcast"
+                  referrerPolicy="strict-origin-when-cross-origin"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   allowFullScreen
                   className="absolute inset-0 h-full w-full"
                 />
               </div>
             </div>
+
+            <p className="mt-3 text-center text-xs text-gray-500 italic">
+              Sending heartfelt warmth and love to our family and friends tuning
+              in from afar. ❤️
+            </p>
           </section>
         )}
 

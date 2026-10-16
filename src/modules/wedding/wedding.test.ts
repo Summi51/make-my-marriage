@@ -34,6 +34,12 @@ import {
 import { User } from "@/modules/auth/models";
 import { Wedding, WeddingMembership } from "./models";
 import { Event } from "@/modules/events/models";
+import {
+  gallerySharing,
+  guestGallery,
+  guestGalleryInfo,
+  updateGallerySharing,
+} from "@/modules/photos/guest-gallery";
 
 const origin = "http://localhost:3000";
 const wedding = {
@@ -67,6 +73,72 @@ const cookieOf = (response: Response) =>
   response.headers.get("set-cookie")!.split(";")[0];
 
 describe("wedding API", () => {
+  it("keeps guest QR stable, encrypted and isolated, and supports pausing", async () => {
+    vi.stubEnv(
+      "MEMBER_INVITATION_SECRET",
+      "guest-gallery-test-secret-at-least-32-characters",
+    );
+    const owner = await signUp("qr-owner@example.com");
+    const created = await createWeddingRoute(
+      weddingRequest("POST", "/api/wedding", owner, wedding),
+    );
+    const id = (await created.json()).data.id;
+    const [first, second] = await Promise.all([
+      gallerySharing(id),
+      gallerySharing(id),
+    ]);
+    expect(first.path).toBe(second.path);
+    const token = first.path.split("/").pop()!;
+    const stored = await Wedding.findById(id).lean();
+    expect(stored?.gallery?.tokenHash).not.toBe(token);
+    expect(stored?.gallery?.encryptedToken).not.toContain(token);
+    expect(String((await guestGallery(token))._id)).toBe(id);
+    expect(await guestGalleryInfo(token)).not.toHaveProperty("gallery");
+    await expect(guestGallery("wrong-token")).rejects.toMatchObject({
+      status: 404,
+    });
+    await updateGallerySharing(id, {
+      isEnabled: true,
+      guestUploadsEnabled: false,
+    });
+    await expect(guestGallery(token, true)).rejects.toMatchObject({
+      status: 403,
+    });
+    expect((await guestGalleryInfo(token)).guestUploadsEnabled).toBe(false);
+    await updateGallerySharing(id, {
+      isEnabled: false,
+      guestUploadsEnabled: false,
+    });
+    await expect(guestGallery(token)).rejects.toMatchObject({ status: 404 });
+    await updateGallerySharing(id, {
+      isEnabled: true,
+      guestUploadsEnabled: true,
+    });
+    expect((await gallerySharing(id)).path).toBe(first.path);
+  });
+  it("creates one recoverable guest link for an older wedding without a token", async () => {
+    vi.stubEnv(
+      "MEMBER_INVITATION_SECRET",
+      "guest-gallery-test-secret-at-least-32-characters",
+    );
+    const owner = await signUp("legacy-qr@example.com");
+    const created = await createWeddingRoute(
+      weddingRequest("POST", "/api/wedding", owner, wedding),
+    );
+    const id = (await created.json()).data.id;
+    await Wedding.updateOne(
+      { _id: id },
+      { $unset: { "gallery.encryptedToken": "" } },
+    );
+    const [first, second] = await Promise.all([
+      gallerySharing(id),
+      gallerySharing(id),
+    ]);
+    expect(first.path).toBe(second.path);
+    expect(first.path).toMatch(/^\/gallery\/[A-Za-z0-9_-]{32}$/);
+    const token = first.path.split("/").pop()!;
+    expect(String((await guestGallery(token))._id)).toBe(id);
+  });
   let server: MongoMemoryReplSet;
   beforeAll(async () => {
     server = await MongoMemoryReplSet.create({ replSet: { count: 1 } });

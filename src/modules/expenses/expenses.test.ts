@@ -64,6 +64,10 @@ describe("expenses API and domain use-cases", () => {
     server = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
     vi.stubEnv("MONGODB_URI", server.getUri());
     vi.stubEnv("APP_ORIGIN", origin);
+    vi.stubEnv(
+      "MEMBER_INVITATION_SECRET",
+      "isolated-test-gallery-secret-at-least-32-characters",
+    );
     await mongoose.connect(server.getUri());
     await Promise.all([
       User.init(),

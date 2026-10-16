@@ -722,6 +722,8 @@ Only the hash is persisted.
 
 # 20. Gallery Token
 
+Guest QR implementation adds `gallery.encryptedToken`, an AES-256-GCM envelope, alongside `tokenHash` so members can recover the same share link. Raw tokens remain absent from storage. See `DECISIONS.md` for key lifecycle and first-use initialisation.
+
 The gallery token should:
 
 - Be generated cryptographically
@@ -3228,6 +3230,9 @@ implementation extends that same collection (not a separate queue service) with:
 - `expiresAt`: PUT URL expiry; pending confirmation accepts a further 24 hours.
 - `objectKey`: staging key while pending, replaced atomically with an independent
   final object key when the photo becomes READY.
+- `uploadTicket`: null for member uploads. For a guest upload, an httpOnly cookie
+  value issued for that album. Confirm and fallback must match it. It is not a
+  guest identity and is not returned in photo listings.
 
 The original member uploader, metadata, and optional event are recorded at
 issuance. `createdAt` remains the reservation time and is the stable pagination

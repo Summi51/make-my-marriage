@@ -16,6 +16,7 @@ const photoSchema = new Schema(
       required: true,
     },
     uploadedByMembershipId: { type: Schema.Types.ObjectId, default: null },
+    uploadTicket: { type: String, default: null },
     status: {
       type: String,
       enum: ["PENDING", "READY", "DELETED"],

@@ -1,5 +1,4 @@
 import "server-only";
-import { randomBytes } from "node:crypto";
 import { Wedding } from "./models";
 
 function slugifyName(name: string) {
@@ -35,8 +34,4 @@ export async function generateUniqueSlug(
     suffix += 1;
   }
   return candidate;
-}
-
-export function generateGalleryToken() {
-  return randomBytes(32).toString("hex");
 }

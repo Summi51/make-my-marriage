@@ -132,7 +132,7 @@ export const updateLivestreamSchema = z
   .refine((value) => Object.values(value).some((item) => item !== undefined), {
     message: "Provide at least one field to update.",
   })
-  .refine((value) => value.isEnabled !== true || Boolean(value.youtubeUrl), {
+  .refine((value) => !(value.isEnabled === true && value.youtubeUrl === null), {
     message: "Add a YouTube link before turning the livestream on.",
     path: ["youtubeUrl"],
   });

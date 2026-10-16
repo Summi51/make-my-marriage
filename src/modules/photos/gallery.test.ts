@@ -198,6 +198,33 @@ describe("photo upload confirmation", () => {
     expect(copyObject).not.toHaveBeenCalled();
   });
 
+  it("does not let one guest confirm another guest's pending upload", async () => {
+    vi.mocked(Photo.findOne).mockResolvedValue(null);
+    await expect(
+      confirmUpload(
+        weddingId,
+        null,
+        {
+          objectKey: pending.uploadKey,
+          filename: "guest.png",
+          mimeType: "image/png",
+          sizeBytes: png.length,
+          eventId: null,
+        },
+        "other-guest-ticket",
+      ),
+    ).rejects.toMatchObject({ status: 404 });
+    expect(Photo.findOne).toHaveBeenCalledWith(
+      expect.objectContaining({
+        weddingId,
+        uploadKey: pending.uploadKey,
+        uploadedByMembershipId: null,
+        uploadTicket: "other-guest-ticket",
+      }),
+    );
+    expect(copyObject).not.toHaveBeenCalled();
+  });
+
   it("rejects a confirm that does not match the reserved photo", async () => {
     vi.mocked(Photo.findOne).mockResolvedValue(pending as never);
     await expect(
@@ -229,35 +256,43 @@ describe("photo upload confirmation", () => {
     expect(copyObject).not.toHaveBeenCalled();
   });
 
-  it("keeps an expired upload when its staging file cannot be deleted", async () => {
-    vi.mocked(Photo.find).mockReturnValue({
-      select: () => ({
-        limit: () => ({
-          lean: async () => [
-            { _id: pending._id, uploadKey: pending.uploadKey },
-          ],
+  it.each([membershipId, null])(
+    "keeps an expired upload and scopes the limiter for actor %s",
+    async (actor) => {
+      vi.mocked(Photo.find).mockReturnValue({
+        select: () => ({
+          limit: () => ({
+            lean: async () => [
+              { _id: pending._id, uploadKey: pending.uploadKey },
+            ],
+          }),
         }),
-      }),
-    } as never);
-    vi.mocked(deleteObject).mockRejectedValue(new Error("storage down"));
-    vi.mocked(Photo.aggregate).mockResolvedValue([
-      { photos: 0, bytes: 0 },
-    ] as never);
-    vi.mocked(createObjectKey).mockReturnValue(
-      "weddings/one/photos/staging/next",
-    );
-    vi.mocked(signUpload).mockResolvedValue({
-      uploadUrl: "https://upload.example/next",
-      expiresAt: new Date().toISOString(),
-    } as never);
-    await reserveUpload(weddingId, membershipId, {
-      filename: "guest.png",
-      mimeType: "image/png",
-      sizeBytes: png.length,
-      eventId: null,
-    });
-    expect(Photo.updateOne).not.toHaveBeenCalled();
-  });
+      } as never);
+      vi.mocked(deleteObject).mockRejectedValue(new Error("storage down"));
+      vi.mocked(Photo.aggregate).mockResolvedValue([
+        { photos: 0, bytes: 0 },
+      ] as never);
+      vi.mocked(createObjectKey).mockReturnValue(
+        "weddings/one/photos/staging/next",
+      );
+      vi.mocked(signUpload).mockResolvedValue({
+        uploadUrl: "https://upload.example/next",
+        expiresAt: new Date().toISOString(),
+      } as never);
+      await reserveUpload(weddingId, actor, {
+        filename: "guest.png",
+        mimeType: "image/png",
+        sizeBytes: png.length,
+        eventId: null,
+      });
+      expect(Photo.updateOne).not.toHaveBeenCalled();
+      expect(consumeLimit).toHaveBeenCalledWith(
+        actor ? `photos:member:${actor}` : `photos:guests:${weddingId}`,
+        120,
+      );
+      expect(consumeLimit).not.toHaveBeenCalledWith("photos:member:null", 120);
+    },
+  );
 
   it("does not reserve another upload when free account storage is full", async () => {
     vi.mocked(Photo.aggregate).mockResolvedValue([

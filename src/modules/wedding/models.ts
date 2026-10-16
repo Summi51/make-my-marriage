@@ -31,6 +31,7 @@ const weddingSchema = new Schema(
       welcomeMessage: { type: String },
     },
     gallery: {
+      encryptedToken: { type: String },
       tokenHash: { type: String, required: true, unique: true },
       isEnabled: { type: Boolean, default: true },
       guestUploadsEnabled: { type: Boolean, default: true },

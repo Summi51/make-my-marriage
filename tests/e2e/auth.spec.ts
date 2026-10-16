@@ -9,6 +9,145 @@ const invitationSecret =
   "isolated-browser-invitation-secret-at-least-32-characters";
 let app: ChildProcess;
 let logs = "";
+test("guest QR prints a populated card and preserves its link when sharing is paused", async ({
+  page,
+  context,
+}) => {
+  await page.goto("/login");
+  await expect(page).toHaveURL(/tab=/);
+  const tab = await page.evaluate(() => window.name.replace("mmm-tab-", ""));
+  const headers = { Origin: "http://localhost:3100", "x-mmm-tab": tab };
+  expect(
+    (
+      await page.request.post("/api/auth/signup", {
+        headers,
+        data: {
+          name: "QR Tester",
+          email: "qr-browser@example.com",
+          password: "isolated qr test password",
+        },
+      })
+    ).ok(),
+  ).toBeTruthy();
+  expect(
+    (
+      await page.request.post("/api/wedding", {
+        headers,
+        data: {
+          brideName: "QR",
+          groomName: "Tester",
+          weddingDate: "2027-12-18",
+          timeZone: "Asia/Kolkata",
+        },
+      })
+    ).ok(),
+  ).toBeTruthy();
+  await page.goto(`/account/wedding/qr?tab=${tab}`);
+  const link = page.getByRole("link", { name: "Open guest gallery" });
+  await expect(link).toBeVisible();
+  const url = await link.getAttribute("href");
+  expect(url).toContain("/gallery/");
+  const whatsapp = page.getByRole("button", { name: "WhatsApp message" });
+  await expect(whatsapp).toBeEnabled();
+  await expect(page.getByRole("link", { name: /WhatsApp/ })).toHaveCount(0);
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, "userAgent", {
+      configurable: true,
+      value: "iPhone",
+    });
+    Object.defineProperty(navigator, "canShare", {
+      configurable: true,
+      value: () => true,
+    });
+    Object.defineProperty(navigator, "share", {
+      configurable: true,
+      value: async (data: ShareData) => {
+        document.body.dataset.shareText = data.text;
+        document.body.dataset.shareMime = data.files?.[0]?.type;
+      },
+    });
+  });
+  await whatsapp.click();
+  await expect(page.locator("body")).toHaveAttribute(
+    "data-share-mime",
+    "image/png",
+  );
+  await expect(page.locator("body")).toHaveAttribute(
+    "data-share-text",
+    new RegExp("QR & Tester"),
+  );
+  expect(await page.locator("body").getAttribute("data-share-text")).toContain(
+    url,
+  );
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, "userAgent", {
+      configurable: true,
+      value: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Chrome/155.0.0.0",
+    });
+    document.body.dataset.shareText = "";
+    document.body.dataset.shareMime = "";
+    window.open = (target) => {
+      document.body.dataset.whatsappUrl = String(target);
+      return null;
+    };
+  });
+  await whatsapp.click();
+  await expect(page.locator("body")).toHaveAttribute("data-share-mime", "");
+  expect(
+    await page.locator("body").getAttribute("data-whatsapp-url"),
+  ).toContain("https://web.whatsapp.com/send?text=");
+  expect(
+    await page.locator("body").getAttribute("data-whatsapp-url"),
+  ).toContain(encodeURIComponent(url!));
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download QR" }).click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toBe("qr-tester-guest-qr.png");
+  expect(await download.failure()).toBeNull();
+  const popupPromise = page.waitForEvent("popup");
+  await page.getByRole("button", { name: "Print table card" }).click();
+  const popup = await popupPromise;
+  await expect(
+    popup.getByRole("heading", { name: "QR & Tester" }),
+  ).toBeVisible();
+  await expect
+    .poll(() =>
+      popup
+        .locator("img")
+        .evaluate(
+          (img: HTMLImageElement) => img.complete && img.naturalWidth > 0,
+        ),
+    )
+    .toBe(true);
+  expect(await popup.evaluate(() => window.opener)).toBeNull();
+  await popup.close();
+  const guest = await context.newPage();
+  await guest.goto(url!);
+  await expect(
+    guest.getByRole("heading", { name: "QR & Tester" }),
+  ).toBeVisible();
+  await expect(guest).toHaveURL(url!);
+  await page
+    .getByRole("checkbox", { name: /Allow guest photo uploads/ })
+    .uncheck();
+  await expect(page.getByText("Sharing settings saved.")).toBeVisible();
+  await guest.reload();
+  await expect(guest.getByText(/Uploads are paused/)).toBeVisible();
+  await page.getByRole("checkbox", { name: /Allow guests to view/ }).uncheck();
+  await expect(page.getByText("Sharing settings saved.")).toBeVisible();
+  await guest.reload();
+  await expect(guest.getByRole("alert")).toContainText(/unavailable|paused/);
+  await page.getByRole("checkbox", { name: /Allow guests to view/ }).check();
+  await expect(page.getByText("Sharing settings saved.")).toBeVisible();
+  await expect(link).toHaveAttribute("href", url!);
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+  await guest.close();
+});
 test("wedding website publishes, preserves tab session, previews themes and unpublishes", async ({
   page,
 }) => {

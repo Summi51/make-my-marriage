@@ -1,5 +1,14 @@
 # Architecture Decisions
 
+## Stable Guest QR sharing (2026-10-15)
+
+- Existing weddings had only an unrecoverable gallery hash and no issued guest-sharing endpoint. On first member access to Guest QR, initialise a stable 192-bit random sharing token with a SHA-256 lookup hash and an AES-256-GCM encrypted copy in `gallery.encryptedToken`. This extends the previous hash-only schema to allow organisers to re-download the same printed QR. Never persist or log a plaintext token.
+- Encryption uses a domain-separated key derived from `MEMBER_INVITATION_SECRET`. Back up this secret securely; rotation needs a token-envelope migration, not silent regeneration, or existing printed links cannot be recovered by organisers.
+- The token grants anyone-with-link gallery read/upload access, not account membership. Pausing gallery sharing denies new reads/uploads; previously downloaded photos and already-issued short-lived R2 read URLs cannot be recalled. Member gallery controls remain separate.
+- Generate QR locally, never transmit sharing tokens to a third-party QR service. Print from the final deployment origin, not localhost. No paid services enabled.
+- Guest uploads share one wedding link, so `uploadedByMembershipId` is null for every guest. A pending guest upload also stores an httpOnly album-scoped ticket. Confirm and fallback uploads must match that ticket. The ticket is not a guest identity and is not returned in photo listings.
+- WhatsApp is still not sent by the server. On a phone, the browser share menu can carry the album text and the QR picture together, so that path uses `navigator.share` only when the device is a phone and it accepts the picture. Desktop Chrome reports the same file share even though its menu has no WhatsApp, so a computer opens WhatsApp Web with the text and copies the QR picture for paste. A page cannot attach that picture to WhatsApp Web by itself.
+
 ## Wedding website publication boundaries
 
 - Publishing makes couple details, location and all active events public. Guest lists, RSVPs, member details and gallery tokens are never included. Archived events are excluded.

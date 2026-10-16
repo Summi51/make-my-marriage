@@ -49,6 +49,13 @@ export default async function LivestreamPage({
         tabId={tab}
         initial={livestream}
         websitePublished={website.isPublished}
+        websiteSlug={website.slug}
+        weddingTitle={
+          wedding.title || `${wedding.brideName} & ${wedding.groomName}`
+        }
+        brideName={wedding.brideName}
+        groomName={wedding.groomName}
+        weddingDate={wedding.weddingDate}
       />
     </WorkspaceChrome>
   );

@@ -2771,6 +2771,8 @@ We do not need an independent Media Service API for V1.
 
 # 84. QR Code
 
+Implemented member endpoint `GET /api/gallery/qr` returns `{data: {path, isEnabled, guestUploadsEnabled}}`; the browser prefixes its current origin. `PATCH` accepts both boolean settings. Both require current wedding membership and return no-store responses. Guest routes are `/api/public/galleries/:token`, `/photos`, and `/upload-url`; `/upload-fallback` accepts a bounded raw body with `objectKey` query when direct R2 uploads are blocked. Guest upload reservation sets an httpOnly cookie scoped to that album. Confirm and fallback accept the upload only when the cookie matches the pending row. Guest responses never expose membership details, the ticket, or storage keys in photo listings.
+
 No database QR entity is required.
 
 ## GET `/api/gallery/qr`

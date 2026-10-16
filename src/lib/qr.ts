@@ -1,6 +1,8 @@
 // Byte-mode QR, versions 1–5, ECC L (one Reed-Solomon block). Drawn in the
 // browser so wedding links work on localhost and Amplify with no third party.
 
+import { create } from "qrcode";
+
 type Version = { version: number; data: number; ecc: number; align: number[] };
 
 const VERSIONS: Version[] = [
@@ -247,6 +249,18 @@ function score(matrix: number[][]) {
 
 /** Quiet-zone QR matrix. 1 is dark. */
 export function qrMatrix(text: string) {
+  if (encodedLength(text) > 106) {
+    // Larger symbols require multiple RS blocks and version information.
+    // Let the standards-compliant encoder handle those layouts locally.
+    const { modules } = create(text, { errorCorrectionLevel: "L" });
+    return Array.from({ length: modules.size + 8 }, (_, y) =>
+      Array.from({ length: modules.size + 8 }, (_, x) =>
+        x >= 4 && y >= 4 && x < modules.size + 4 && y < modules.size + 4
+          ? Boolean(modules.get(y - 4, x - 4))
+          : false,
+      ),
+    );
+  }
   const bytes = encodedLength(text);
   const version = VERSIONS.find((item) => bytes + 2 <= item.data);
   if (!version) throw new Error("URL is too long for this QR code.");
@@ -291,4 +305,72 @@ export function qrSvg(text: string) {
     )
     .join("");
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" shape-rendering="crispEdges"><rect width="100%" height="100%" fill="#fff"/>${cells}</svg>`;
+}
+
+function escapeXml(value: string) {
+  return value.replace(/[&<>"']/g, (char) => {
+    const map: Record<string, string> = {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&apos;",
+    };
+    return map[char] ?? char;
+  });
+}
+
+function wrapCardLine(value: string, max = 42) {
+  const words = value.trim().split(/\s+/).filter(Boolean);
+  const lines: string[] = [];
+  let line = "";
+  for (const word of words) {
+    const next = line ? `${line} ${word}` : word;
+    if (line && next.length > max) {
+      lines.push(line);
+      line = word;
+    } else {
+      line = next;
+    }
+  }
+  if (line) lines.push(line);
+  // Keep the album link even when the caption is longer than three wrapped lines.
+  return lines.length > 8
+    ? [...lines.slice(0, 7), lines[lines.length - 1]]
+    : lines;
+}
+
+/** Table card with the couple's name and the WhatsApp caption on the picture. */
+export function guestQrCardSvg(text: string, title: string, caption = "") {
+  const code = qrSvg(text);
+  const size = Number(code.match(/viewBox="0 0 (\d+)/)?.[1] ?? 0);
+  if (!size) throw new Error("QR card could not be drawn.");
+  const label = title.trim() || "Wedding";
+  const safeTitle = escapeXml(label);
+  const fontSize = Math.min(
+    52,
+    Math.max(28, Math.floor(1200 / Math.max(label.length, 8))),
+  );
+  const captionLines = wrapCardLine(caption).map(escapeXml);
+  const width = 840;
+  const height = 1120 + Math.max(0, captionLines.length - 1) * 28;
+  const qr = 560;
+  const qrX = (width - qr) / 2;
+  const qrY = 250;
+  const captionSvg = captionLines
+    .map(
+      (line, index) =>
+        `<text x="${width / 2}" y="${980 + index * 28}" text-anchor="middle" fill="#2c1820" font-family="Georgia, sans-serif" font-size="18">${line}</text>`,
+    )
+    .join("");
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+<rect width="100%" height="100%" fill="#faf8f5"/>
+<rect x="28" y="28" width="${width - 56}" height="${height - 56}" rx="36" fill="#fff" stroke="#e5d8d3"/>
+<text x="${width / 2}" y="118" text-anchor="middle" fill="#865045" font-family="Georgia, serif" font-size="22" letter-spacing="6">SHARE THE MEMORIES</text>
+<text x="${width / 2}" y="188" text-anchor="middle" fill="#2c1820" font-family="Georgia, serif" font-size="${fontSize}">${safeTitle}</text>
+<svg x="${qrX}" y="${qrY}" width="${qr}" height="${qr}" viewBox="0 0 ${size} ${size}">${code.replace(/^<svg[^>]*>/, "").replace(/<\/svg>$/, "")}</svg>
+<text x="${width / 2}" y="900" text-anchor="middle" fill="#735d65" font-family="Georgia, sans-serif" font-size="24">Scan to view and upload wedding photos.</text>
+<text x="${width / 2}" y="938" text-anchor="middle" fill="#735d65" font-family="Georgia, sans-serif" font-size="24">No account needed.</text>
+${captionSvg}
+</svg>`;
 }

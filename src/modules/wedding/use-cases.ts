@@ -1,5 +1,5 @@
 import "server-only";
-import { createHash } from "node:crypto";
+
 import type { ClientSession } from "mongoose";
 import { z } from "zod";
 import { Wedding, WeddingMembership } from "./models";
@@ -14,11 +14,9 @@ import {
 } from "./schemas";
 import { Event } from "@/modules/events/models";
 import { WeddingError } from "./errors";
-import { generateUniqueSlug, generateGalleryToken } from "./slug";
+import { generateUniqueSlug } from "./slug";
+import { createGalleryCredentials } from "@/modules/photos/guest-gallery";
 import { connectToDatabase } from "@/server/db";
-
-const hashToken = (token: string) =>
-  createHash("sha256").update(token).digest("hex");
 
 export function toWeddingDto(wedding: {
   _id: unknown;
@@ -87,8 +85,10 @@ export async function createWedding(
     input.groomName,
     input.weddingDate,
   );
+  const credentials = createGalleryCredentials();
   const gallery = {
-    tokenHash: hashToken(generateGalleryToken()),
+    encryptedToken: credentials.encryptedToken,
+    tokenHash: credentials.tokenHash,
     isEnabled: true,
     guestUploadsEnabled: true,
   };

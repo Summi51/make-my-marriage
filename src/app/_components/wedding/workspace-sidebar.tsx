@@ -117,8 +117,6 @@ export function WorkspaceSidebar({
           name: "Guest QR",
           href: "/account/wedding/qr",
           icon: "qrcode",
-          badge: "Soon",
-          disabled: true,
         },
         {
           name: "Livestream",

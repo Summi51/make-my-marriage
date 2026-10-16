@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, useTransition, useSyncExternalStore } from "react";
+import { useState, useTransition } from "react";
+import { useSyncExternalStore } from "react";
+const subscribeOrigin = () => () => {};
+const readOrigin = () => window.location.origin;
+const serverOrigin = () => "";
 import Link from "next/link";
 import { PublicWebsiteClient } from "./public-website-client";
 import { qrSvg } from "@/lib/qr";
 import { tabFetch, tabPath } from "@/lib/tab-session";
-
-const subscribeOrigin = () => () => {};
-const browserOrigin = () => window.location.origin;
-const serverOrigin = () => "";
 
 interface WebsiteData {
   slug: string;
@@ -150,17 +150,17 @@ export function WebsiteManagerClient({
   } | null>(null);
 
   const [isPending, startTransition] = useTransition();
+  const origin = useSyncExternalStore(
+    subscribeOrigin,
+    readOrigin,
+    serverOrigin,
+  );
 
   // Public URL with tab query so members can preview even if draft
   const publicUrl = `/w/${slug}${!isPublished && tabId ? `?tab=${encodeURIComponent(tabId)}` : ""}`;
-  const origin = useSyncExternalStore(
-    subscribeOrigin,
-    browserOrigin,
-    serverOrigin,
-  );
   const displayPublicUrl = `${origin}/w/${slug}`;
-
-  const shareUrl = () => new URL(`/w/${slug}`, window.location.origin).href;
+  const shareUrl = () =>
+    origin === "" ? displayPublicUrl : new URL(`/w/${slug}`, origin).href;
 
   const requirePublished = () => {
     if (isPublished) return true;

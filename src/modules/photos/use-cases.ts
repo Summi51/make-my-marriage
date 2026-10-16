@@ -128,8 +128,9 @@ function photoSignature(mimeType: string, bytes: Buffer) {
 
 export async function reserveUpload(
   weddingId: string,
-  membershipId: string,
+  membershipId: string | null,
   input: z.infer<typeof uploadUrlSchema>,
+  uploadTicket?: string,
 ) {
   await connectToDatabase();
   const eventId = await activeEvent(weddingId, input.eventId);
@@ -142,7 +143,12 @@ export async function reserveUpload(
     );
   }
   await assertStorageRoom(input.sizeBytes);
-  await consumeLimit(`photos:member:${membershipId}`, 120);
+  await consumeLimit(
+    membershipId
+      ? `photos:member:${membershipId}`
+      : `photos:guests:${weddingId}`,
+    120,
+  );
   await consumeLimit(`photos:wedding:${weddingId}`, 600);
   try {
     await consumeLimit(
@@ -172,8 +178,9 @@ export async function reserveUpload(
     originalFilename: safeName(input.filename),
     mimeType: input.mimeType,
     sizeBytes: input.sizeBytes,
-    uploaderType: "MEMBER",
+    uploaderType: membershipId ? "MEMBER" : "GUEST",
     uploadedByMembershipId: membershipId,
+    uploadTicket: uploadTicket ?? null,
     status: "PENDING",
     expiresAt: new Date(signed.expiresAt),
   });
@@ -186,15 +193,17 @@ export async function reserveUpload(
 
 export async function uploadStagingFallback(
   weddingId: string,
-  membershipId: string,
+  membershipId: string | null,
   objectKey: string,
   body: Buffer,
+  uploadTicket?: string,
 ) {
   await connectToDatabase();
   const pending = await Photo.findOne({
     weddingId,
     uploadKey: objectKey,
     uploadedByMembershipId: membershipId,
+    ...(membershipId ? {} : { uploadTicket: uploadTicket ?? null }),
     status: "PENDING",
   });
   if (!pending) {
@@ -227,14 +236,16 @@ export async function uploadStagingFallback(
 
 export async function confirmUpload(
   weddingId: string,
-  membershipId: string,
+  membershipId: string | null,
   input: z.infer<typeof confirmPhotoSchema>,
+  uploadTicket?: string,
 ) {
   await connectToDatabase();
   const pending = await Photo.findOne({
     weddingId,
     uploadKey: input.objectKey,
     uploadedByMembershipId: membershipId,
+    ...(membershipId ? {} : { uploadTicket: uploadTicket ?? null }),
   });
   if (!pending || pending.status === "DELETED") {
     throw new WeddingError("NOT_FOUND", "That upload was not found.", 404);
