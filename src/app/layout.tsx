@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 import "./globals.css";
+import { ZealoopBubble } from "./_components/zealoop-bubble";
 import { TabSessionBootstrap } from "./_components/tab-session-bootstrap";
 
 export const metadata: Metadata = {
@@ -18,6 +19,9 @@ export default function RootLayout({
       <body>
         <TabSessionBootstrap />
         {children}
+        <ZealoopBubble
+          publicKey={process.env.NEXT_PUBLIC_ZEALOOP_PUBLIC_KEY ?? ""}
+        />
       </body>
     </html>
   );

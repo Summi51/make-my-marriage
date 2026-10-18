@@ -35,6 +35,7 @@ export function GuestGalleryClient({ token }: { token: string }) {
   const [notice, setNotice] = useState("");
   const input = useRef<HTMLInputElement>(null);
   const refresh = useCallback(async () => {
+    setLoading(true);
     try {
       const details = await json(base);
       setInfo(details.data);

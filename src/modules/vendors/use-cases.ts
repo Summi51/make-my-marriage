@@ -15,6 +15,7 @@ type VendorRow = {
   email?: string | null;
   address?: string | null;
   website?: string | null;
+  meetingUrl?: string | null;
   totalAgreedCostPaise?: number | null;
   eventIds?: unknown[];
   notes?: string | null;
@@ -35,6 +36,7 @@ function dto(row: VendorRow) {
     email: row.email ?? null,
     address: row.address ?? null,
     website: row.website ?? null,
+    meetingUrl: row.meetingUrl ?? null,
     totalAgreedCostPaise: row.totalAgreedCostPaise ?? null,
     eventIds: (row.eventIds ?? []).map(String),
     notes: row.notes ?? null,

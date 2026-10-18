@@ -28,6 +28,7 @@ const vendorSchema = new Schema(
     email: { type: String, default: null },
     address: { type: String, default: null },
     website: { type: String, default: null },
+    meetingUrl: { type: String, default: null },
     totalAgreedCostPaise: { type: Number, default: null },
     eventIds: { type: [Schema.Types.ObjectId], default: [] },
     notes: { type: String, default: null },

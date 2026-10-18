@@ -9,6 +9,72 @@ const invitationSecret =
   "isolated-browser-invitation-secret-at-least-32-characters";
 let app: ChildProcess;
 let logs = "";
+test("mobile workspace menu keeps all features reachable", async ({ page }) => {
+  await page.goto("/login");
+  await expect(page).toHaveURL(/tab=/);
+  const tab = await page.evaluate(() => window.name.replace("mmm-tab-", ""));
+  const headers = { Origin: "http://localhost:3100", "x-mmm-tab": tab };
+  expect(
+    (
+      await page.request.post("/api/auth/signup", {
+        headers,
+        data: {
+          name: "Menu Tester",
+          email: "menu@example.com",
+          password: "isolated menu test password",
+        },
+      })
+    ).ok(),
+  ).toBeTruthy();
+  expect(
+    (
+      await page.request.post("/api/wedding", {
+        headers,
+        data: {
+          brideName: "Menu",
+          groomName: "Tester",
+          weddingDate: "2027-12-18",
+          timeZone: "Asia/Kolkata",
+        },
+      })
+    ).ok(),
+  ).toBeTruthy();
+  await page.goto(`/account?tab=${tab}`);
+  for (const viewport of [
+    { width: 390, height: 844 },
+    { width: 320, height: 568 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.getByRole("button", { name: "Open workspace menu" }).click();
+    const menu = page.getByRole("dialog", { name: "Your workspace" });
+    await expect(menu).toBeVisible();
+    await expect(
+      menu.getByRole("link", { name: "Wedding Members", exact: true }),
+    ).toBeInViewport();
+    await expect(
+      menu.getByRole("link", { name: "Livestream", exact: true }),
+    ).toBeInViewport();
+    await page.keyboard.press("Escape");
+    await expect(menu).not.toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Open workspace menu" }),
+    ).toBeFocused();
+  }
+  await page.setViewportSize({ width: 667, height: 375 });
+  await page.getByRole("button", { name: "Open workspace menu" }).click();
+  const menu = page.getByRole("dialog");
+  await menu
+    .getByRole("link", { name: "Wedding Members", exact: true })
+    .scrollIntoViewIfNeeded();
+  await expect(
+    menu.getByRole("button", { name: "Close workspace navigation" }),
+  ).toBeInViewport();
+  await menu
+    .getByRole("link", { name: "Wedding Members", exact: true })
+    .click();
+  await expect(menu).not.toBeVisible();
+  await expect(page).toHaveURL(/\/members/);
+});
 test("guest QR prints a populated card and preserves its link when sharing is paused", async ({
   page,
   context,
@@ -128,19 +194,40 @@ test("guest QR prints a populated card and preserves its link when sharing is pa
   ).toBeVisible();
   await expect(guest).toHaveURL(url!);
   await page
-    .getByRole("checkbox", { name: /Allow guest photo uploads/ })
-    .uncheck();
+    .locator("label")
+    .filter({ hasText: "Allow guest photo uploads" })
+    .click();
   await expect(page.getByText("Sharing settings saved.")).toBeVisible();
   await guest.reload();
   await expect(guest.getByText(/Uploads are paused/)).toBeVisible();
-  await page.getByRole("checkbox", { name: /Allow guests to view/ }).uncheck();
+  await page
+    .locator("label")
+    .filter({ hasText: "Allow guests to view the album" })
+    .click();
   await expect(page.getByText("Sharing settings saved.")).toBeVisible();
   await guest.reload();
   await expect(guest.getByRole("alert")).toContainText(/unavailable|paused/);
-  await page.getByRole("checkbox", { name: /Allow guests to view/ }).check();
+  await page
+    .locator("label")
+    .filter({ hasText: "Allow guests to view the album" })
+    .click();
   await expect(page.getByText("Sharing settings saved.")).toBeVisible();
   await expect(link).toHaveAttribute("href", url!);
   await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole("button", { name: "Open workspace menu" }).click();
+  const menu = page.getByRole("dialog", { name: "Your workspace" });
+  await expect(menu).toBeVisible();
+  await expect(
+    menu.getByRole("link", { name: "Wedding Members", exact: true }),
+  ).toBeInViewport();
+  await expect(
+    menu.getByRole("link", { name: "Livestream", exact: true }),
+  ).toBeInViewport();
+  await page.keyboard.press("Escape");
+  await expect(menu).not.toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Open workspace menu" }),
+  ).toBeFocused();
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= window.innerWidth,

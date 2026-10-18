@@ -277,7 +277,7 @@ export function PublicWebsiteClient({
             >
               Itinerary
             </a>
-            {wedding.livestream.enabled && youtubeId && (
+            {wedding.livestream?.enabled && youtubeId && (
               <a
                 href="#livestream"
                 className={`font-medium text-gray-600 transition-colors hover:text-[#6D213C] ${
@@ -616,7 +616,7 @@ export function PublicWebsiteClient({
         )}
 
         {/* Livestream Section */}
-        {wedding.livestream.enabled && youtubeId && (
+        {wedding.livestream?.enabled && youtubeId && (
           <section
             id="livestream"
             className={`scroll-mt-20 ${isMobile ? "my-8" : "my-12"}`}

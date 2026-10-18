@@ -1,5 +1,11 @@
 # Architecture Decisions
 
+## Free support scope (2026-10-16)
+
+- User requests the official Zealoop chat button, not a local substitute. The widget loads from `https://api.zealoop.com/widget.js` with the public key only. It stays off secret-link pages because the widget reports the current page address. Do not call `identify()`, connect wedding records, or expose write/payment actions. `ZEALOOP_WIDGET_SECRET` and `ZEALOOP_ORG_ID` stay server-only and are not committed. The widget secret cannot save knowledge. Saving the decided answers needs a Zealoop dashboard session or `ZEALOOP_INSTALL_TOKEN`. Until those snippets are saved, Zealoop has no product answers. `/help` lists the decided questions so visitors can copy them into the Zealoop button, and says that Zealoop cannot answer them yet. The written FAQ cards are the readable answers.
+- Paid app entitlements are cancelled by the user's latest free-only instruction. Shagun checkout and vendor checkout are not built. Test mode is not used: a Razorpay test payment still needs a Razorpay account, and switching that same integration to live keys is what moves real money. Recording an expense does not transfer money. No payment secret is stored in this repository.
+- Custom in-app audio/video calling remains deferred. No provider with an approved zero-spend calling plan is configured, and no paid plan is authorised. A vendor may store an optional `meetingUrl`. The app only opens that free external link, such as a member-created Google Meet or WhatsApp link. It does not place, host, record, or bill the call. Existing vendor phone links remain ordinary `tel:` links.
+
 ## Stable Guest QR sharing (2026-10-15)
 
 - Existing weddings had only an unrecoverable gallery hash and no issued guest-sharing endpoint. On first member access to Guest QR, initialise a stable 192-bit random sharing token with a SHA-256 lookup hash and an AES-256-GCM encrypted copy in `gallery.encryptedToken`. This extends the previous hash-only schema to allow organisers to re-download the same printed QR. Never persist or log a plaintext token.

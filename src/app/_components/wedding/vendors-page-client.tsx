@@ -47,6 +47,7 @@ type VendorForm = {
   email: string;
   address: string;
   website: string;
+  meetingUrl: string;
   costRupees: string;
   eventIds: string[];
   notes: string;
@@ -60,6 +61,7 @@ const blank: VendorForm = {
   email: "",
   address: "",
   website: "",
+  meetingUrl: "",
   costRupees: "",
   eventIds: [],
   notes: "",
@@ -192,6 +194,7 @@ export function VendorsPageClient({
       "Email",
       "Address",
       "Website",
+      "Meeting link",
       "Total Agreed Cost (INR)",
       "Notes",
     ];
@@ -208,6 +211,7 @@ export function VendorsPageClient({
       cell(v.email || ""),
       cell(v.address || ""),
       cell(v.website || ""),
+      cell(v.meetingUrl || ""),
       v.totalAgreedCostPaise != null
         ? (v.totalAgreedCostPaise / 100).toFixed(2)
         : "",
@@ -237,6 +241,7 @@ export function VendorsPageClient({
             email: vendor.email ?? "",
             address: vendor.address ?? "",
             website: vendor.website ?? "",
+            meetingUrl: vendor.meetingUrl ?? "",
             costRupees:
               vendor.totalAgreedCostPaise == null
                 ? ""
@@ -279,6 +284,7 @@ export function VendorsPageClient({
             email: form.email.trim() || null,
             address: form.address.trim() || null,
             website: form.website.trim() || null,
+            meetingUrl: form.meetingUrl.trim() || null,
             totalAgreedCostPaise:
               parsedCost === null ? null : Math.round(parsedCost * 100),
             eventIds: form.eventIds,
@@ -907,6 +913,18 @@ export function VendorsPageClient({
                         ↗
                       </a>
                     )}
+                    {vendor.meetingUrl && (
+                      <a
+                        href={vendor.meetingUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="Open saved meeting link"
+                        aria-label="Open saved meeting link"
+                        className="flex h-8 items-center justify-center rounded-xl bg-[#faf4f2] px-2 text-xs font-semibold text-[#2b2025] transition-colors hover:bg-[#f2e6e3] hover:text-[#6d213c]"
+                      >
+                        Meet
+                      </a>
+                    )}
                     {!isArchived && (
                       <button
                         type="button"
@@ -1107,6 +1125,25 @@ export function VendorsPageClient({
                       maxLength={500}
                       className={fieldClass}
                     />
+                  </label>
+                </div>
+                <div>
+                  <label className={labelClass}>
+                    Audio / video meeting link
+                    <input
+                      type="url"
+                      value={form.meetingUrl}
+                      onChange={(e) =>
+                        setForm({ ...form, meetingUrl: e.target.value })
+                      }
+                      placeholder="https://meet.google.com/..."
+                      maxLength={500}
+                      className={fieldClass}
+                    />
+                    <span className="mt-1 block text-xs text-[#8b797e]">
+                      Paste a free Google Meet, WhatsApp, or other meeting link.
+                      This opens that link. It does not start a paid call.
+                    </span>
                   </label>
                 </div>
               </div>

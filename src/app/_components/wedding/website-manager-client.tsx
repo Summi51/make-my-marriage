@@ -1041,7 +1041,14 @@ export function WebsiteManagerClient({
                   role="img"
                   aria-label="Wedding website QR code"
                   dangerouslySetInnerHTML={{
-                    __html: origin ? qrSvg(shareUrl()) : "",
+                    __html: (() => {
+                      if (!origin) return "";
+                      try {
+                        return qrSvg(shareUrl());
+                      } catch {
+                        return "";
+                      }
+                    })(),
                   }}
                 />
               </div>

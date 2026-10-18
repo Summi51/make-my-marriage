@@ -13,8 +13,13 @@ import { WeddingError } from "@/modules/wedding/errors";
 import { connectToDatabase } from "@/server/db";
 
 export const gallerySettingsSchema = z
-  .object({ isEnabled: z.boolean(), guestUploadsEnabled: z.boolean() })
-  .strict();
+  .object({
+    isEnabled: z.boolean().optional(),
+    guestUploadsEnabled: z.boolean().optional(),
+  })
+  .refine((v) => Object.values(v).some((x) => x !== undefined), {
+    message: "Provide at least one field to update.",
+  });
 const digest = (token: string) =>
   createHash("sha256").update(token).digest("hex");
 function encryptionKey() {
@@ -124,8 +129,8 @@ export async function gallerySharing(weddingId: string) {
   const token = decrypt(wedding.gallery.encryptedToken);
   return {
     path: `/gallery/${token}`,
-    isEnabled: wedding.gallery.isEnabled,
-    guestUploadsEnabled: wedding.gallery.guestUploadsEnabled,
+    isEnabled: wedding.gallery.isEnabled !== false,
+    guestUploadsEnabled: wedding.gallery.guestUploadsEnabled !== false,
   };
 }
 export async function updateGallerySharing(
@@ -133,14 +138,14 @@ export async function updateGallerySharing(
   input: z.infer<typeof gallerySettingsSchema>,
 ) {
   await connectToDatabase();
+  const update: Record<string, unknown> = {};
+  if (input.isEnabled !== undefined)
+    update["gallery.isEnabled"] = input.isEnabled;
+  if (input.guestUploadsEnabled !== undefined)
+    update["gallery.guestUploadsEnabled"] = input.guestUploadsEnabled;
   await Wedding.updateOne(
     { _id: weddingId, deletedAt: null },
-    {
-      $set: {
-        "gallery.isEnabled": input.isEnabled,
-        "gallery.guestUploadsEnabled": input.guestUploadsEnabled,
-      },
-    },
+    { $set: update },
   );
   return gallerySharing(weddingId);
 }
@@ -163,7 +168,7 @@ export async function guestGallery(token: string, upload = false) {
       "This gallery link is unavailable or sharing has been paused.",
       404,
     );
-  if (upload && !wedding.gallery?.guestUploadsEnabled)
+  if (upload && wedding.gallery?.guestUploadsEnabled === false)
     throw new WeddingError(
       "FORBIDDEN",
       "Photo uploads are paused. You can still view the album.",
@@ -183,7 +188,7 @@ export async function guestGalleryInfo(token: string) {
       groomName: wedding.groomName,
       weddingDate: wedding.weddingDate,
     },
-    guestUploadsEnabled: wedding.gallery?.guestUploadsEnabled ?? false,
+    guestUploadsEnabled: wedding.gallery?.guestUploadsEnabled !== false,
     events: events.map((event) => ({
       id: String(event._id),
       name: event.name,

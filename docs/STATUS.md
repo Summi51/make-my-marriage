@@ -10,6 +10,12 @@ Foundation, the public homepage, database infrastructure, account authentication
 
 ## Completed
 
+### Integrated public help and getting-started guide
+
+- Homepage navigation and guidance cards link to Help & FAQs and a full How it works page.
+- `/help` shows written answers for planning, members, guest access, expenses, vendors, website publishing, livestream and privacy. Ready questions copy into the official Zealoop button. That button loads from the public key and stays off private guest and invitation links.
+- Zealoop knowledge is still empty. The widget secret cannot save snippets, so the button does not answer product questions until those snippets are saved from the Zealoop dashboard. The written FAQ cards are the answers visitors can read now. No deployment performed.
+
 ### Foundation scaffold
 
 - Next.js App Router application with TypeScript and Tailwind CSS.
@@ -282,6 +288,12 @@ Foundation, the public homepage, database infrastructure, account authentication
   - The downloaded and shared card includes the couple's name, the QR, and the album caption with the private link. On a phone, WhatsApp message shares that picture and the text together. On a computer, Chrome's share menu cannot list WhatsApp, so the button opens WhatsApp with the text and copies the QR picture to paste into that chat.
   - `GET /api/gallery/qr` and `PATCH /api/gallery/qr` keep the same encrypted token when sharing is paused and resumed. Older weddings without a recoverable token receive one on first open.
   - Guests open `/gallery/:token` without an account. Viewing and uploads can be paused independently. Guest uploads are tied to an httpOnly ticket for that album, so one guest cannot confirm another guest's pending upload. The public wedding site still does not expose the gallery token.
+
+### Free help and vendor meeting links
+
+- `/help` shows the decided questions and their written answers. The Zealoop button is on the site. It does not answer those questions until the snippets are saved in Zealoop.
+- A vendor can store an optional free meeting link. The vendor card opens that link. The app does not place, host, or charge for the call.
+- Expenses remain a record of money already paid. Shagun checkout and vendor checkout are not part of the free app.
 
 ## Not started
 

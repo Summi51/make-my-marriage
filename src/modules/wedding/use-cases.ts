@@ -47,8 +47,8 @@ export function toWeddingDto(wedding: {
     },
     website: { slug: wedding.website?.slug ?? "" },
     gallery: {
-      isEnabled: wedding.gallery?.isEnabled ?? false,
-      guestUploadsEnabled: wedding.gallery?.guestUploadsEnabled ?? false,
+      isEnabled: wedding.gallery?.isEnabled !== false,
+      guestUploadsEnabled: wedding.gallery?.guestUploadsEnabled !== false,
     },
     livestream: {
       youtubeUrl: wedding.livestream?.youtubeUrl ?? null,

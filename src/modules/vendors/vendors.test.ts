@@ -113,6 +113,18 @@ describe("wedding vendors", () => {
     ).rejects.toMatchObject({ status: 400 });
   });
 
+  it("stores an optional free meeting link without starting a call", async () => {
+    const saved = await createVendor(weddingA, {
+      ...input,
+      meetingUrl: "https://meet.google.com/abc-defg-hij",
+    });
+    expect(saved.meetingUrl).toBe("https://meet.google.com/abc-defg-hij");
+    const cleared = await updateVendor(weddingA, saved.id, {
+      meetingUrl: null,
+    });
+    expect(cleared.meetingUrl).toBeNull();
+  });
+
   it("restores only an archived vendor in the current wedding", async () => {
     const saved = await createVendor(weddingA, input);
     await expect(restoreVendor(weddingA, saved.id)).rejects.toMatchObject({

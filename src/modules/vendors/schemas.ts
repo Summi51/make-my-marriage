@@ -32,6 +32,7 @@ export const createVendorSchema = z.object({
     .optional(),
   address: optionalText(500),
   website: optionalWebsite,
+  meetingUrl: optionalWebsite,
   totalAgreedCostPaise: z
     .number()
     .int()

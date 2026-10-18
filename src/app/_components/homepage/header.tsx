@@ -8,8 +8,9 @@ import { homepageActions } from "./session-actions";
 
 const links = [
   ["Features", "#features"],
-  ["How it works", "#how-it-works"],
+  ["How it works", "/how-it-works"],
   ["Themes", "#themes"],
+  ["Help & FAQs", "/help"],
 ] as const;
 
 export function Header() {

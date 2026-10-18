@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Logo } from "../homepage/logo";
 
 interface NavItem {
@@ -42,7 +42,32 @@ export function WorkspaceSidebar({
     controlledMobileOpen !== undefined
       ? controlledMobileOpen
       : internalMobileOpen;
+  const mobileDialog = useRef<HTMLDialogElement>(null);
+  const menuTrigger = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const dialog = mobileDialog.current;
+    dialog?.showModal();
+    const desktop = window.matchMedia("(min-width: 1024px)");
+    const closeOnDesktop = () => {
+      if (desktop.matches) dialog?.close();
+    };
+    desktop.addEventListener("change", closeOnDesktop);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      dialog?.close();
+      desktop.removeEventListener("change", closeOnDesktop);
+      document.body.style.overflow = previousOverflow;
+      const trigger = menuTrigger.current;
+      menuTrigger.current = null;
+      if (trigger?.isConnected) trigger.focus();
+    };
+  }, [mobileOpen]);
   const setMobileOpen = (open: boolean) => {
+    if (open && document.activeElement instanceof HTMLElement) {
+      menuTrigger.current = document.activeElement;
+    }
     if (onMobileClose && !open) {
       onMobileClose();
     }
@@ -557,7 +582,7 @@ export function WorkspaceSidebar({
       </div>
 
       {/* ── Nav Links matching media_1791490525544.png & media_1791490586863.png ── */}
-      <div className="flex-1 space-y-4 px-3.5 py-4">
+      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-3.5 py-4">
         {/* Primary Dashboard Link */}
         <div>
           <Link
@@ -719,30 +744,65 @@ export function WorkspaceSidebar({
       )}
 
       {/* Desktop Sidebar (fixed, non-scrolling, matching media_1791490525544.png & media_1791490586863.png) */}
-      <aside className="hidden w-64 shrink-0 border-r border-[#ebe5df] bg-white select-none lg:sticky lg:top-0 lg:flex lg:min-h-screen lg:flex-col lg:self-start">
+      <aside className="hidden w-64 shrink-0 border-r border-[#ebe5df] bg-white select-none lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col lg:self-start">
         {renderNavContent()}
       </aside>
 
       {/* Mobile Drawer */}
       {mobileOpen && (
-        <div className="fixed inset-0 z-50 flex lg:hidden">
-          <div
-            className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity"
-            onClick={() => setMobileOpen(false)}
-          />
-          <div className="relative flex w-full max-w-xs flex-1 flex-col bg-white shadow-xl">
-            <div className="absolute top-3 right-3 z-10">
+        <dialog
+          ref={mobileDialog}
+          aria-labelledby="workspace-menu-title"
+          onClose={() => setMobileOpen(false)}
+          onCancel={() => setMobileOpen(false)}
+          className="fixed inset-0 m-0 h-dvh max-h-none w-full max-w-none bg-[#faf8f5] p-0 text-[#231f20] backdrop:bg-black/40"
+        >
+          <div className="flex h-full min-h-0 flex-col px-4 pt-[max(12px,env(safe-area-inset-top))] pb-[max(12px,env(safe-area-inset-bottom))]">
+            <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[#e8e2da] pb-3">
+              <div className="min-w-0">
+                <h2
+                  id="workspace-menu-title"
+                  className="font-editorial text-xl font-semibold text-[#5c1a33]"
+                >
+                  Your workspace
+                </h2>
+                <p className="truncate text-xs text-[#71717a]">
+                  {weddingTitle || userName}
+                </p>
+              </div>
               <button
                 type="button"
+                aria-label="Close workspace navigation"
                 onClick={() => setMobileOpen(false)}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-[#71717a] shadow hover:text-[#1e1a1f]"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#e8e2da] bg-white text-[#5c1a33] hover:bg-[#f5e9ed]"
               >
                 ✕
               </button>
             </div>
-            {renderNavContent()}
+            <nav
+              aria-label="Workspace features"
+              className="min-h-0 overflow-y-auto overscroll-contain py-3"
+            >
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {[
+                  { name: "Dashboard", href: "/account", icon: "dashboard" },
+                  ...sections.flatMap((section) => section.items),
+                ].map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMobileOpen(false)}
+                    aria-current={pathname === item.href ? "page" : undefined}
+                    className={`flex min-h-12 items-center gap-2 rounded-xl border px-3 py-2 text-xs leading-snug font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6d213c] ${pathname === item.href ? "border-[#4e1224] bg-[#4e1224] text-white" : "border-[#e8e2da] bg-white text-[#5c1a33] hover:bg-[#f5e9ed]"}`}
+                  >
+                    <span aria-hidden="true">{renderIcon(item.icon)}</span>
+                    <span>{item.name}</span>
+                  </Link>
+                ))}
+              </div>
+            </nav>
           </div>
-        </div>
+        </dialog>
       )}
     </>
   );

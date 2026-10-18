@@ -711,8 +711,8 @@ export function ExpensesPageClient({
             Wedding expenses
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6B645D]">
-            Track payments and advances actually made for your wedding, all in
-            one organised place.
+            Record payments and advances already made for your wedding. Saving
+            an expense does not send money to a vendor or a guest.
           </p>
         </div>
 

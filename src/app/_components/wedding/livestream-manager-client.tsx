@@ -813,7 +813,7 @@ export function LivestreamManagerClient({
               <div className="rounded-2xl border-2 border-[#e5d8d3] bg-white p-4 shadow-sm">
                 {qrCodeSvg ? (
                   <div
-                    className="h-56 w-56"
+                    className="flex h-56 w-56 items-center justify-center [&_svg]:h-full [&_svg]:w-full"
                     dangerouslySetInnerHTML={{ __html: qrCodeSvg }}
                   />
                 ) : (

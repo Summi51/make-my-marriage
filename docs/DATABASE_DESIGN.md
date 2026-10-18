@@ -1481,6 +1481,7 @@ Vendor {
 
     address: String?,
     website: String?,
+    meetingUrl: String?,
 
     totalAgreedCostPaise: Number?,
 
