@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { STARTER_QUESTIONS } from "./help-answers";
+import { CHAT_QUESTIONS } from "./help-answers";
 
 export function ZealoopQuestions() {
   const [copied, setCopied] = useState("");
@@ -17,26 +17,32 @@ export function ZealoopQuestions() {
 
   return (
     <section
-      aria-label="Questions to ask Zealoop"
-      className="space-y-4 rounded-3xl border border-[#EAE1D7] bg-white p-6 shadow-sm sm:p-8"
+      aria-label="Questions to ask in chat"
+      className="rounded-3xl border border-[#E8DDD1] bg-white p-6 shadow-sm sm:p-8"
     >
-      <h2 className="font-editorial text-3xl text-gray-900">
-        Ask Zealoop these
-      </h2>
-      <p className="text-sm leading-relaxed text-gray-600">
-        Tap a question to copy it, then paste it into the dark Zealoop button in
-        the bottom-right corner. The written answers are on this page. Zealoop
-        can reply only after those answers are saved in its dashboard.
+      <p className="text-brand-wine text-[11px] font-bold tracking-[0.16em] uppercase">
+        Ask in chat
       </p>
-      <ul className="flex flex-wrap gap-2">
-        {STARTER_QUESTIONS.map((item) => (
+      <h2 className="font-editorial mt-2 text-3xl text-gray-900">
+        Questions worth asking in chat
+      </h2>
+      <p className="mt-3 text-sm leading-relaxed text-gray-600">
+        Tap a question to copy it, then paste it into the chat button in the
+        bottom-right corner. These are planning questions. The cards below
+        answer different ones.
+      </p>
+      <ul className="mt-5 grid gap-2">
+        {CHAT_QUESTIONS.map((item) => (
           <li key={item}>
             <button
               type="button"
-              className="border-brand-border bg-brand-cream hover:border-brand-wine rounded-full border px-3 py-1.5 text-left text-xs font-medium text-gray-800"
+              className="border-brand-border bg-brand-cream-light hover:border-brand-wine hover:bg-brand-cream flex w-full items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left text-sm font-medium text-gray-800"
               onClick={() => void copyQuestion(item)}
             >
-              {copied === item ? "Copied — paste in Zealoop" : item}
+              <span>{item}</span>
+              <span className="text-brand-wine shrink-0 text-xs font-semibold">
+                {copied === item ? "Copied" : "Copy"}
+              </span>
             </button>
           </li>
         ))}

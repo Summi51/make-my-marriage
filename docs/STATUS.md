@@ -12,9 +12,9 @@ Foundation, the public homepage, database infrastructure, account authentication
 
 ### Integrated public help and getting-started guide
 
-- Homepage navigation and guidance cards link to Help & FAQs and a full How it works page.
-- `/help` shows written answers for planning, members, guest access, expenses, vendors, website publishing, livestream and privacy. Ready questions copy into the official Zealoop button. That button loads from the public key and stays off private guest and invitation links.
-- Zealoop knowledge is still empty. The widget secret cannot save snippets, so the button does not answer product questions until those snippets are saved from the Zealoop dashboard. The written FAQ cards are the answers visitors can read now. No deployment performed.
+- Homepage navigation and guidance point to How it works. That page shows who signs in, the six-step journey, the workspace screens by their real names, and the three things guests can open.
+- `/help` stays available for the chat button and written answers. It is no longer a public nav item. The button loads from the public key and stays off private guest and invitation links. Chat prompts and written cards are different questions.
+- Written answers match the product: the YouTube link is saved on Livestream, and a member invitation sent to the wrong email stays valid until an Admin revokes it. Zealoop still needs the current questions saved as Paste text. Until each row says READY, the button can repeat older snippets. No deployment performed.
 
 ### Foundation scaffold
 

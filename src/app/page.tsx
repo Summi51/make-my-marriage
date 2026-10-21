@@ -56,38 +56,21 @@ export default async function HomePage({
             className="mx-auto grid max-w-6xl gap-6 px-6 py-16 md:grid-cols-2"
             aria-label="Planning guidance"
           >
-            {[
-              [
-                "Your first steps, made simple",
-                "Follow our complete guide, from creating your wedding to sharing the memories.",
-                "/how-it-works",
-                "See how it works",
-              ],
-              [
-                "A little help, whenever you need it",
-                "Find free answers about invitations, photos, planning tools and privacy.",
-                "/help",
-                "Explore Help & FAQs",
-              ],
-            ].map(([title, description, href, label]) => (
-              <article
-                key={href}
-                className="border-brand-border rounded-3xl border bg-white p-8"
+            <article className="border-brand-border rounded-3xl border bg-white p-8 md:col-span-2">
+              <h2 className="font-editorial text-brand-wine text-3xl">
+                Your first steps, made simple
+              </h2>
+              <p className="mt-4 max-w-2xl leading-relaxed text-gray-600">
+                See who signs in, what guests open, and how the workspace moves
+                from the first ceremony to the last photo.
+              </p>
+              <a
+                href="/how-it-works"
+                className="text-brand-wine mt-5 inline-block py-3 font-semibold underline-offset-4 hover:underline"
               >
-                <h2 className="font-editorial text-brand-wine text-3xl">
-                  {title}
-                </h2>
-                <p className="mt-4 leading-relaxed text-gray-600">
-                  {description}
-                </p>
-                <a
-                  href={href}
-                  className="text-brand-wine mt-5 inline-block py-3 font-semibold underline-offset-4 hover:underline"
-                >
-                  {label} →
-                </a>
-              </article>
-            ))}
+                See how it works →
+              </a>
+            </article>
           </section>
           <BottomWineCTABanner />
         </main>

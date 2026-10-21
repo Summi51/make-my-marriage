@@ -49,11 +49,11 @@ export function PublicGuideShell({ children }: { children: ReactNode }) {
             aria-label="Guide navigation"
             className="flex items-center gap-5 text-sm font-medium text-gray-600 sm:gap-9 sm:text-[15px]"
           >
-            <a href="/how-it-works" className="hover:text-brand-wine py-3">
+            <a
+              href="/how-it-works"
+              className="text-brand-wine py-3 font-semibold"
+            >
               How it works
-            </a>
-            <a href="/help" className="text-brand-wine py-3 font-semibold">
-              Help & FAQs
             </a>
             <a
               href="/account"

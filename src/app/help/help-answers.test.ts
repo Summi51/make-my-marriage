@@ -1,19 +1,34 @@
 import { describe, expect, it } from "vitest";
-import { HELP_ANSWERS, STARTER_QUESTIONS } from "./help-answers";
+import { CHAT_QUESTIONS, HELP_ANSWERS } from "./help-answers";
 
 describe("help page questions", () => {
-  it("keeps every starter question in the written FAQ list", () => {
-    for (const question of STARTER_QUESTIONS) {
-      const match = HELP_ANSWERS.find((item) => item.question === question);
-      expect(match?.answer.length).toBeGreaterThan(20);
+  it("keeps chat prompts separate from the written answers", () => {
+    const written = new Set(HELP_ANSWERS.map((item) => item.question));
+    for (const question of CHAT_QUESTIONS) {
+      expect(written.has(question)).toBe(false);
     }
+    expect(CHAT_QUESTIONS.length).toBeGreaterThan(3);
   });
 
-  it("states that recording an expense does not send money", () => {
+  it("explains that expenses record money already paid", () => {
     expect(
-      HELP_ANSWERS.find(
-        (item) => item.question === "Does recording an expense send money?",
+      HELP_ANSWERS.find((item) => item.question.includes("already paid"))
+        ?.answer,
+    ).toMatch(/already been paid/i);
+  });
+
+  it("sends livestream setup to the Livestream screen", () => {
+    expect(
+      HELP_ANSWERS.find((item) =>
+        item.question.includes("watch the ceremonies"),
       )?.answer,
-    ).toMatch(/does not make a payment/i);
+    ).toMatch(/Open Livestream/);
+  });
+
+  it("tells an Admin to revoke a member invitation sent to the wrong email", () => {
+    expect(
+      HELP_ANSWERS.find((item) => item.question.includes("wrong email"))
+        ?.answer,
+    ).toMatch(/revoke the invitation/);
   });
 });

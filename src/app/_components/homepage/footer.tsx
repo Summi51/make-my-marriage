@@ -47,12 +47,6 @@ export function MainFooter() {
               One wedding. A thousand little details. One place to bring them
               all together.
             </p>
-            <a
-              href="/help"
-              className="inline-block py-2 font-semibold text-[#6d213c] underline underline-offset-4"
-            >
-              Help & FAQs
-            </a>
             <span className="block pt-4 text-[10px] font-bold tracking-widest text-[#B59C86] uppercase">
               Made with love, for your big day.
             </span>
