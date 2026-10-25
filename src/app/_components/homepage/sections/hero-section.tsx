@@ -29,7 +29,7 @@ export function HeroSection() {
           />
           <a
             className="inline-flex w-full items-center justify-center gap-2.5 rounded-xl border border-[#E4DBD0] bg-[#F4EFEA] px-6 py-3.5 text-[15.5px] font-medium text-gray-800 transition-colors hover:bg-[#EDE5DE] sm:w-auto"
-            href="#how-it-works"
+            href="#celebration-film"
           >
             <svg
               aria-hidden="true"
@@ -46,7 +46,7 @@ export function HeroSection() {
                 strokeWidth="2"
               ></polygon>
             </svg>
-            <span>See How It Works</span>
+            <span>Watch Wedding Film</span>
           </a>
         </div>
         <div className="inline-flex flex-wrap items-center justify-center gap-3 rounded-full border border-[#EDE4DA] bg-[#FAF6F2] px-4 py-1.5 text-xs font-medium text-gray-600 md:text-sm">

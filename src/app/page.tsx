@@ -8,6 +8,7 @@ import { MainFooter } from "./_components/homepage/footer";
 import { GuestMobileExperienceSection } from "./_components/homepage/guest-preview";
 import { ThemesSection } from "./_components/homepage/theme-gallery";
 import { InteractiveWorkspaceCard } from "./_components/homepage/workspace-preview";
+import { HeroVideoShowcase } from "./_components/homepage/hero-video-showcase";
 import {
   HeroSection,
   ProblemVsSolutionSection,
@@ -43,6 +44,7 @@ export default async function HomePage({
         <Header />
         <main id="main-content">
           <HeroSection />
+          <HeroVideoShowcase />
           <InteractiveWorkspaceCard />
           <ProblemVsSolutionSection />
           <FamilyRolesSection />

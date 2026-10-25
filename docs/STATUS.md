@@ -10,6 +10,11 @@ Foundation, the public homepage, database infrastructure, account authentication
 
 ## Completed
 
+### Homepage celebration film
+
+- The homepage hero opens a muted wedding film. It plays when the frame is in view, pauses when it leaves, and stays paused when the visitor asks for reduced motion.
+- Sound, fullscreen, and the position control follow the real player. A failed film shows a retry message instead of a silent black frame. The 5 MB file is not downloaded until the visitor reaches it.
+
 ### Integrated public help and getting-started guide
 
 - Homepage navigation and guidance point to How it works. That page shows who signs in, the six-step journey, the workspace screens by their real names, and the three things guests can open.
