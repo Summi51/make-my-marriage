@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { BrandWordmark } from "@/app/_components/homepage/logo";
 import {
   MAX_PHOTO_BYTES,
   MAX_BATCH,
@@ -133,11 +134,9 @@ export function GuestGalleryClient({ token }: { token: string }) {
   return (
     <main className="min-h-screen bg-[#faf8f5] px-5 py-10 text-[#2c1820] sm:py-16">
       <div className="mx-auto max-w-5xl">
-        <header className="text-center">
-          <p className="text-xs font-semibold tracking-[.2em] text-[#937c6e] uppercase">
-            Make My Marriage · Shared memories
-          </p>
-          <h1 className="mt-4 font-serif text-4xl text-[#6d213c] sm:text-6xl">
+        <header className="flex flex-col items-center text-center">
+          <BrandWordmark size="compact" className="mb-4" />
+          <h1 className="mt-2 font-serif text-4xl text-[#6d213c] sm:text-6xl">
             {info
               ? `${info.wedding.brideName} & ${info.wedding.groomName}`
               : "Wedding photo album"}

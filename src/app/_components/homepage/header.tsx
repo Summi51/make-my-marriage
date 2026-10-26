@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRef, useState } from "react";
 import { AvailabilityButton } from "./homepage-actions";
 import { useHomepageSession } from "./homepage-session";
+import { BrandWordmark } from "./logo";
 import { homepageActions } from "./session-actions";
 
 const links = [
@@ -30,46 +31,13 @@ export function Header() {
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6">
         <Link
           href={session === "signed-out" ? "#top" : actions.primary.href}
-          className="flex shrink-0 items-center gap-2 sm:gap-3"
           aria-label={
             session === "signed-out"
               ? "Make My Marriage home"
               : actions.primary.label
           }
         >
-          <svg
-            aria-hidden="true"
-            width="32"
-            height="32"
-            fill="none"
-            viewBox="0 0 40 40"
-          >
-            <ellipse
-              cx="16"
-              cy="20"
-              rx="12"
-              ry="12"
-              stroke="#6B1B34"
-              strokeWidth="2.2"
-            />
-            <ellipse
-              cx="24"
-              cy="20"
-              rx="12"
-              ry="12"
-              stroke="#A26769"
-              strokeWidth="2.2"
-            />
-            <circle cx="20" cy="20" r="2.5" fill="#6B1B34" />
-          </svg>
-          <span className="flex flex-col">
-            <span className="text-sm leading-none font-bold tracking-tight text-gray-900 sm:text-lg">
-              Make My Marriage
-            </span>
-            <span className="mt-1 text-[9px] font-semibold tracking-wider text-gray-500 uppercase sm:text-[11px]">
-              Wedding Workspace
-            </span>
-          </span>
+          <BrandWordmark />
         </Link>
         <nav
           aria-label="Main navigation"

@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
+import { BrandWordmark } from "@/app/_components/homepage/logo";
 import type { PublicInvitationDto } from "@/modules/guests/use-cases";
 
 interface InvitationClientProps {
@@ -282,43 +284,9 @@ export function InvitationClient({
       {/* Top Navigation Bar */}
       <header className="sticky top-0 z-40 w-full border-b border-[#eee8e0] bg-white/95 backdrop-blur-sm">
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 lg:px-12">
-          {/* Brand Logo & Title */}
-          <div className="flex items-center gap-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#faf1ec] ring-1 ring-[#e8e2da]">
-              <svg
-                aria-hidden="true"
-                className="h-5 w-5 shrink-0"
-                fill="none"
-                viewBox="0 0 40 40"
-              >
-                <ellipse
-                  cx="16"
-                  cy="20"
-                  rx="12"
-                  ry="12"
-                  stroke="#6B1B34"
-                  strokeWidth="2.2"
-                />
-                <ellipse
-                  cx="24"
-                  cy="20"
-                  rx="12"
-                  ry="12"
-                  stroke="#A26769"
-                  strokeWidth="2.2"
-                />
-                <circle cx="20" cy="20" r="2.5" fill="#6B1B34" />
-              </svg>
-            </span>
-            <div className="flex flex-col">
-              <span className="font-editorial text-[16px] leading-tight font-semibold tracking-tight text-stone-900 sm:text-lg">
-                Make My Marriage
-              </span>
-              <span className="text-[9px] font-semibold tracking-[0.16em] text-stone-500 uppercase sm:text-[10px]">
-                Wedding Workspace
-              </span>
-            </div>
-          </div>
+          <Link href="/" aria-label="Make My Marriage home">
+            <BrandWordmark size="compact" />
+          </Link>
 
           {/* Right: Guest Profile & Invitation Indicator */}
           <div className="flex items-center gap-3.5">
@@ -729,42 +697,10 @@ export function InvitationClient({
       {/* Brand Footer */}
       <footer className="w-full border-t border-[#eee8e0] bg-white py-14 text-center select-none">
         <div className="mx-auto flex max-w-3xl flex-col items-center px-4">
-          {/* Centered Website Logo */}
+          {/* Centered Website Logo matching homepage */}
           <div className="mb-3 inline-flex items-center justify-center">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#e8e2da] bg-[#faf1ec] shadow-2xs">
-              <svg
-                aria-hidden="true"
-                className="h-6 w-6 shrink-0"
-                fill="none"
-                viewBox="0 0 40 40"
-              >
-                <ellipse
-                  cx="16"
-                  cy="20"
-                  rx="12"
-                  ry="12"
-                  stroke="#6B1B34"
-                  strokeWidth="2.2"
-                />
-                <ellipse
-                  cx="24"
-                  cy="20"
-                  rx="12"
-                  ry="12"
-                  stroke="#A26769"
-                  strokeWidth="2.2"
-                />
-                <circle cx="20" cy="20" r="2.5" fill="#6B1B34" />
-              </svg>
-            </span>
+            <BrandWordmark size="default" />
           </div>
-
-          <p className="font-editorial text-sm font-semibold tracking-tight text-stone-900 sm:text-base">
-            Make My Marriage
-          </p>
-          <p className="text-[9px] font-semibold tracking-[0.18em] text-stone-400 uppercase sm:text-[10px]">
-            Wedding Workspace
-          </p>
           <p className="mt-4 text-xs font-normal text-stone-500">
             A shared space for your celebration.
           </p>

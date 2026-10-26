@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Logo } from "../homepage/logo";
+import { BrandWordmark } from "../homepage/logo";
 import { tabFetch, tabPath } from "@/lib/tab-session";
 
 type Invite = {
@@ -282,14 +282,12 @@ export function InvitationAcceptance({ token }: { token: string }) {
 
   return (
     <div className="min-h-screen bg-[#faf8f5] text-[#1e1a1f]">
-      <header className="border-b border-[#ebe5df] bg-white px-6 py-5">
-        <Link
-          href="/"
-          className="font-editorial mx-auto flex max-w-5xl items-center gap-3 text-xl"
-        >
-          <Logo className="h-9 w-9" />
-          Make My Marriage
-        </Link>
+      <header className="border-b border-[#ebe5df] bg-white px-6 py-4">
+        <div className="mx-auto flex max-w-5xl items-center">
+          <Link href="/" aria-label="Make My Marriage home">
+            <BrandWordmark size="compact" />
+          </Link>
+        </div>
       </header>
       <main className="mx-auto max-w-xl px-5 py-12 sm:py-20">
         <div className="rounded-2xl border border-[#ebe5df] bg-white p-7 text-center shadow-sm sm:p-10">

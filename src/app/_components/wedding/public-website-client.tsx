@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { Logo } from "../homepage/logo";
 import {
   formatSchedule,
   zonedDateTime,
@@ -237,31 +238,10 @@ export function PublicWebsiteClient({
           }`}
         >
           <div className="flex items-center gap-2">
-            <svg
-              className={`shrink-0 ${isMobile ? "h-4 w-4" : "h-5 w-5"} ${
-                theme === "CLASSIC"
-                  ? "text-[#6D213C]"
-                  : theme === "MINIMAL"
-                    ? "text-[#1A1A1A]"
-                    : "text-[#8A2846]"
-              }`}
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              viewBox="0 0 24 24"
-            >
-              <circle cx="9" cy="12" r="5" strokeLinecap="round" />
-              <circle cx="15" cy="12" r="5" strokeLinecap="round" />
-            </svg>
+            <Logo className={`shrink-0 ${isMobile ? "h-5 w-5" : "h-6 w-6"}`} />
             <span
-              className={`font-serif font-semibold tracking-tight ${
-                isMobile ? "text-xs" : "text-base"
-              } ${
-                theme === "CLASSIC"
-                  ? "text-[#6D213C]"
-                  : theme === "MINIMAL"
-                    ? "text-[#1A1A1A]"
-                    : "text-[#8A2846]"
+              className={`font-sans font-bold tracking-tight text-gray-900 ${
+                isMobile ? "text-xs" : "text-sm"
               }`}
             >
               Make My Marriage

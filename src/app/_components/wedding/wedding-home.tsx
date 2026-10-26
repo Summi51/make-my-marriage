@@ -1029,8 +1029,8 @@ export function WeddingHome({
           <div className="group relative overflow-hidden rounded-xl border border-[#e8e2da] bg-[#faf8f5] sm:col-span-2 md:col-span-1">
             <div className="relative h-48 w-full sm:h-56">
               <Image
-                src="/images/wedding.jpg"
-                alt="Walima Reception"
+                src="/images/walima.jpg"
+                alt="Walima Reception - Bride and Groom with Family"
                 fill
                 unoptimized
                 sizes="(max-width: 768px) 100vw, 33vw"

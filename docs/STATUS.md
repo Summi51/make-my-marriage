@@ -13,7 +13,7 @@ Foundation, the public homepage, database infrastructure, account authentication
 ### Homepage celebration film
 
 - The homepage hero opens a muted wedding film. It plays when the frame is in view, pauses when it leaves, and stays paused when the visitor asks for reduced motion.
-- Sound, fullscreen, and the position control follow the real player. A failed film shows a retry message instead of a silent black frame. The 5 MB file is not downloaded until the visitor reaches it.
+- Sound, fullscreen, and the position control follow the real player. The position control can be used with a keyboard. A failed film shows a retry message instead of a silent black frame. The 5 MB file is not downloaded until the visitor reaches it.
 
 ### Integrated public help and getting-started guide
 
