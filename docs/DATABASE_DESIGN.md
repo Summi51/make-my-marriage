@@ -722,6 +722,8 @@ Only the hash is persisted.
 
 # 20. Gallery Token
 
+Guest QR implementation adds `gallery.encryptedToken`, an AES-256-GCM envelope, alongside `tokenHash` so members can recover the same share link. Raw tokens remain absent from storage. See `DECISIONS.md` for key lifecycle and first-use initialisation.
+
 The gallery token should:
 
 - Be generated cryptographically
@@ -1102,8 +1104,11 @@ Archived events:
 - Do not appear in normal planning views
 - Do not appear in future invitations
 - Preserve existing relationships
+- Can be restored by clearing `archivedAt`
 
-This is safer than cascading deletion across many collections.
+This is safer than cascading deletion across many collections. A restored event
+keeps the same id, so existing guest, task, expense, and photo links become
+active again without being rewritten.
 
 ---
 
@@ -1261,6 +1266,8 @@ Guest {
     phone: String?,
 
     maxGuests: Number,
+
+    isFamily: Boolean, // family-group invitation label; party size stays in maxGuests
 
     invitedEventIds: [ObjectId],
 
@@ -1474,6 +1481,7 @@ Vendor {
 
     address: String?,
     website: String?,
+    meetingUrl: String?,
 
     totalAgreedCostPaise: Number?,
 
@@ -1630,6 +1638,8 @@ Expense {
 
     currency: "INR",
 
+    paymentKind: "PAID" | "ADVANCE" | "PARTIAL" | "FINAL",
+
     expenseDate: Date,
 
     category: String,
@@ -1709,6 +1719,8 @@ Recommended:
 index(weddingId, expenseDate)
 
 index(weddingId, category)
+
+index(weddingId, paymentKind)
 
 index(weddingId, eventId)
 
@@ -3219,6 +3231,9 @@ implementation extends that same collection (not a separate queue service) with:
 - `expiresAt`: PUT URL expiry; pending confirmation accepts a further 24 hours.
 - `objectKey`: staging key while pending, replaced atomically with an independent
   final object key when the photo becomes READY.
+- `uploadTicket`: null for member uploads. For a guest upload, an httpOnly cookie
+  value issued for that album. Confirm and fallback must match it. It is not a
+  guest identity and is not returned in photo listings.
 
 The original member uploader, metadata, and optional event are recorded at
 issuance. `createdAt` remains the reservation time and is the stable pagination
