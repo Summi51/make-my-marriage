@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Logo } from "../homepage/logo";
+import { BrandWordmark } from "../homepage/logo";
 
 interface NavItem {
   name: string;
@@ -559,25 +559,15 @@ export function WorkspaceSidebar({
 
   const renderNavContent = () => (
     <div className="flex h-full flex-col justify-between bg-white text-[#231f20]">
-      {/* ── Brand Header matching atelier logo ── */}
-      <div className="shrink-0 border-b border-[#f4ede7] px-5 py-4">
+      {/* ── Brand Header matching homepage logo and font ── */}
+      <div className="shrink-0 border-b border-[#f4ede7] px-4 py-4 sm:px-5">
         <Link
           href="/"
-          className="group flex items-center gap-3"
+          className="group block"
           onClick={() => setMobileOpen(false)}
           aria-label="Go to your wedding homepage"
         >
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#faf1ec] transition group-hover:bg-[#5c1a33]/10">
-            <Logo className="h-5 w-5 shrink-0 text-[#5c1a33]" />
-          </span>
-          <div className="flex min-w-0 flex-col">
-            <span className="font-editorial text-[16px] leading-tight font-semibold tracking-tight text-[#1e1a1f] transition group-hover:text-[#5c1a33]">
-              Make My Marriage
-            </span>
-            <span className="text-[8.5px] font-bold tracking-[0.18em] text-[#a89fa1] uppercase">
-              Wedding Workspace
-            </span>
-          </div>
+          <BrandWordmark size="compact" />
         </Link>
       </div>
 

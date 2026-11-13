@@ -1,3 +1,5 @@
+import { BrandWordmark } from "./logo";
+
 export function MainFooter() {
   return (
     <footer
@@ -7,41 +9,8 @@ export function MainFooter() {
       <div className="mx-auto max-w-6xl px-6">
         <div className="grid grid-cols-1 gap-10 pb-16 md:grid-cols-12">
           <div className="space-y-4 md:col-span-5">
-            <a className="flex items-center gap-3" href="#top">
-              <svg
-                aria-hidden="true"
-                focusable="false"
-                className="text-brand-wine h-8 w-8"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 40 40"
-              >
-                <ellipse
-                  className="text-brand-wine"
-                  cx="16"
-                  cy="20"
-                  rx="12"
-                  ry="12"
-                  strokeWidth="2.2"
-                ></ellipse>
-                <ellipse
-                  className="text-[#A26769]"
-                  cx="24"
-                  cy="20"
-                  rx="12"
-                  ry="12"
-                  strokeWidth="2.2"
-                ></ellipse>
-                <circle cx="20" cy="20" fill="#6B1B34" r="2.5"></circle>
-              </svg>
-              <div className="flex flex-col">
-                <span className="text-lg leading-none font-bold text-gray-900">
-                  Make My Marriage
-                </span>
-                <span className="mt-1 text-[10px] font-semibold tracking-wider text-gray-500 uppercase">
-                  Wedding Workspace
-                </span>
-              </div>
+            <a href="#top" aria-label="Make My Marriage home">
+              <BrandWordmark />
             </a>
             <p className="max-w-sm pt-2 text-sm leading-relaxed text-gray-600">
               One wedding. A thousand little details. One place to bring them

@@ -1,28 +1,20 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Logo } from "../homepage/logo";
+import { BrandWordmark } from "../homepage/logo";
 import type { ReactNode } from "react";
 
 export function AuthShell({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-screen flex-col bg-[#fbf8f7] font-[Inter,Arial,sans-serif] text-[#1e1a1f]">
+    <div className="flex min-h-screen flex-col bg-[#fbf8f7] text-[#1e1a1f]">
       <main className="flex min-h-[calc(100svh-60px)] w-full flex-1 flex-col lg:flex-row">
         <div className="flex w-full flex-col justify-between bg-[#fffbfa] px-8 py-10 sm:px-14 lg:w-[48%] lg:px-20 lg:py-16 xl:w-[46%] xl:px-24">
           <header>
             <Link
               href="/"
-              className="inline-flex items-center gap-3"
+              className="inline-flex items-center"
               aria-label="Make My Marriage home"
             >
-              <Logo />
-              <span>
-                <span className="block font-sans text-[17px] leading-none font-bold tracking-tight">
-                  Make My Marriage
-                </span>
-                <span className="mt-0.5 block text-[11px] tracking-wider text-[#635559]/80 uppercase">
-                  Wedding Workspace
-                </span>
-              </span>
+              <BrandWordmark />
             </Link>
           </header>
           <div className="mx-auto my-auto w-full max-w-md py-10 lg:mx-0 lg:py-6">
