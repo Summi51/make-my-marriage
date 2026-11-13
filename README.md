@@ -1,23 +1,27 @@
 # Make My Marriage
 
-A private wedding workspace for couples and the family helping them plan. One wedding, one shared place for the schedule, guests, photos, vendors, and the public page guests actually open.
+Plan one wedding in one private place. Couples and family keep the schedule, guests, budget, vendors, and photos together, then share a public page that guests can actually open.
 
-The homepage includes a muted celebration film at `/videos/hero-wedding.mp4`. It starts silent, respects reduced-motion preferences, and can be played, paused, unmuted, or opened full screen.
+**Live dev site:** [https://dev.debru5zwxk5qm.amplifyapp.com](https://dev.debru5zwxk5qm.amplifyapp.com)
 
-## What you can do
+The homepage opens with a muted celebration film. Guests can play it, turn the sound on, or watch it full screen. The same film is used on Wedding Made Easy.
 
-- Create an account, set up a wedding, and invite family as Admin or Manager.
-- Plan events and tasks, track expenses, and keep a private vendor roster.
-- Invite guests, collect RSVPs, and prepare email or WhatsApp reminders.
-- Store photos in a private gallery and share a guest photo QR.
-- Publish a wedding website, a public portal, and a livestream link.
-- Read [How it works](/how-it-works) and [Help](/help) before signing in.
+## Plan together
 
-Signed-in Admins, the bride, and the groom land on their wedding home, with their name and role shown in the workspace.
+| | |
+| --- | --- |
+| Wedding home | Set up the wedding, then see names and roles after sign-in |
+| People | Invite Admins and Managers. Only an Admin can change membership |
+| Plan | Events, tasks, expenses, and a private vendor list |
+| Guests | Invitations, RSVPs, email reminders, and WhatsApp links to open |
+| Memories | Private gallery, guest photo QR, and a public wedding page |
+| Help | [How it works](https://dev.debru5zwxk5qm.amplifyapp.com/how-it-works) and [Help](https://dev.debru5zwxk5qm.amplifyapp.com/help) |
 
-## Local setup
+Sign in at [login](https://dev.debru5zwxk5qm.amplifyapp.com/login) or create an account at [signup](https://dev.debru5zwxk5qm.amplifyapp.com/signup). An Admin, bride, or groom returns to their own wedding home.
 
-Requires Node.js 22 or newer and npm.
+## Run it locally
+
+Node.js 22 or newer, plus npm.
 
 ```bash
 npm install
@@ -25,36 +29,31 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Open http://localhost:3000. The health check is http://localhost:3000/api/health.
+Open [http://localhost:3000](http://localhost:3000). Health check: [http://localhost:3000/api/health](http://localhost:3000/api/health).
 
-Set `MONGODB_URI` before using accounts or wedding data. Set `APP_ORIGIN` to the public HTTPS origin in production so invitation links leave localhost. Copy the remaining names from `.env.example` only when you enable email, gallery storage, reminders, vendor search, or the help widget. Never commit real values.
+Set `MONGODB_URI` before creating accounts. In production, set `APP_ORIGIN` to the public HTTPS address so invitation links are not stuck on localhost. Add email, gallery, reminder, vendor-search, and help-widget values only when you turn those features on. Keep real values out of git.
 
-## Routes
-
-| Path | Who it is for |
-| --- | --- |
-| `/` | Public homepage and celebration film |
-| `/signup`, `/login` | Create an account or sign in |
-| `/account` | Wedding home after sign-in |
-| `/how-it-works`, `/help` | Planning guide and answers |
-| `/w/[slug]` | Public wedding page |
-| `/invite/[token]` | Guest invitation and RSVP |
-| `/gallery/[token]` | Guest photo upload |
-
-## Validation
+## Check the app
 
 ```bash
 npm run validate
 ```
 
-That runs format check, lint, typecheck, unit tests, and the production build. For the browser sign-in journey, install Chromium once with `npx playwright install chromium`, then run `npm run test:e2e`.
+That checks formatting, lint, types, unit tests, and the production build. For the browser sign-in path:
 
-## Architecture
+```bash
+npx playwright install chromium
+npm run test:e2e
+```
 
-- `src/app/`: routes, layouts, UI composition, and thin HTTP handlers
-- `src/modules/`: domain behavior, Mongoose models, and Zod schemas
-- `src/server/`: shared server infrastructure
-- `src/lib/`: shared, framework-neutral utilities
-- `docs/`: product and technical sources of truth
+## Stack
 
-See `AGENTS.md` for the repository boundaries.
+Next.js modular monolith, MongoDB, session cookies, and Zod validation. Routes and screens live in `src/app/`. Wedding rules live in `src/modules/`. Shared server code lives in `src/server/`. Product decisions live in `docs/`. See `AGENTS.md` for the repository boundaries.
+
+## License
+
+Copyright (c) 2026 Summi51
+
+Permission is granted to use, copy, modify, and share this software for personal and internal planning, provided this copyright notice stays with the source.
+
+The software is provided as is, without warranty of any kind. The authors are not liable for any claim or damages arising from its use. Do not publish guest data, photos, or secrets from a deployment you do not control.
