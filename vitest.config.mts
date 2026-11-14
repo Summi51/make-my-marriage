@@ -1,6 +1,11 @@
 import { defineConfig } from "vitest/config";
+import { fileURLToPath } from "node:url";
 
 export default defineConfig({
-  resolve: { alias: { "@": new URL("./src", import.meta.url).pathname } },
-  test: { environment: "node", coverage: { provider: "v8" } },
+  resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
+  test: {
+    include: ["src/**/*.test.ts"],
+    environment: "node",
+    coverage: { provider: "v8" },
+  },
 });

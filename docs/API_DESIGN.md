@@ -1,13 +1,13 @@
 # Make My Marriage
 ## REST API Design Document
 
-**Version:** V1  
-**Architecture:** Modular Monolith  
-**Backend:** Next.js Route Handlers + Node.js  
-**API Style:** REST  
-**Authentication:** Custom server-side sessions  
-**Validation:** Zod  
-**Database:** MongoDB Atlas + Mongoose  
+**Version:** V1
+**Architecture:** Modular Monolith
+**Backend:** Next.js Route Handlers + Node.js
+**API Style:** REST
+**Authentication:** Custom server-side sessions
+**Validation:** Zod
+**Database:** MongoDB Atlas + Mongoose
 **Status:** API Design Baseline
 
 ---
@@ -905,7 +905,7 @@ Create secure invitation token
 ↓
 Create invitation record
 ↓
-Send email immediately through Resend
+Send email immediately through Volanea. The email links to the invitation landing page, which offers signup when the invited email has no account and sign-in when it does. Both preserve the invited email and return to this invitation before explicit acceptance.
 ```
 
 ### Response
@@ -965,17 +965,17 @@ Returns enough information to render the invitation page.
   "data": {
     "email": "rahul@example.com",
     "role": "MANAGER",
+    "accountExists": false,
     "wedding": {
       "brideName": "Princi",
       "groomName": "Akshay",
       "weddingDate": "2027-02-14"
-    },
-    "requiresLogin": true
+    }
   }
 }
 ```
 
-Do not expose internal Wedding information unnecessarily.
+`accountExists` is true only when the invited email already has an account. The invitation page uses it to offer sign-in or account creation. It is available only to someone holding the invitation token. Do not expose internal Wedding information unnecessarily.
 
 ---
 
@@ -1200,6 +1200,29 @@ archivedAt = now
 ```json
 {
   "success": true
+}
+```
+
+---
+
+# 33a. Restore Event
+
+## POST `/api/events/:eventId/restore`
+
+Authentication required.
+
+Clears `archivedAt` and returns the event to the active itinerary. Existing
+guest, task, expense, and photo links are unchanged. Restoring an event that
+is not archived, or that belongs to another wedding, returns `NOT_FOUND`.
+
+### Response
+
+```json
+{
+  "data": {
+    "id": "...",
+    "archivedAt": null
+  }
 }
 ```
 
@@ -1537,9 +1560,11 @@ endpoint, public invitation page, email delivery, or RSVP submission. Guest CRUD
 never returns the raw token. Later sharing retrieves the existing secret rather
 than rotating it on each request. Deleting its owner invalidates any future link.
 
-As of 2026-09-16, link retrieval, public invitation viewing, RSVP submission, and
-RSVP summaries (§45, §50–52) are implemented. Guest email delivery, bulk actions
-and reminders (§46–49) remain deferred. Copy/open actions do not mark emails sent.
+As of 2026-10-10, link retrieval, public invitation viewing, RSVP submission,
+RSVP summaries (§45, §50–52), guest email delivery, and reminders are implemented.
+The implemented reminder routes are the ones below, not the older Resend and
+EmailJob design in §46–49. Copying a link does not mark an invitation sent.
+Opening WhatsApp marks it sent only after the member opens the chat.
 
 ---
 
@@ -1719,6 +1744,44 @@ Typical request:
 ```
 
 Creates asynchronous EmailJobs.
+
+The sections above describe an older Resend and EmailJob design. They are not
+the current contract. The implemented routes are:
+
+## POST `/api/guests/:guestId/send-invitation`
+
+Authentication required. Admin or Manager. Optional body `{ "sendEmail": true }`
+delivers the invitation email. An empty body only records that the invitation
+was shared. The response is the guest.
+
+## POST `/api/guests/:guestId/send-reminder`
+
+Authentication required. Admin or Manager. Optional body `{ "sendEmail": true }`
+emails one pending guest. The same guest cannot be reminded again for 24 hours.
+
+## POST `/api/guests/send-reminders`
+
+Authentication required. Admin or Manager. Optional body `{ "sendEmail": true }`
+reminds every pending guest in the current wedding, skipping anyone reminded in
+the last 24 hours. Response data is `{ sentCount, emailsSent, emailsFailed, skippedNoEmail, skippedRecent, emailError }`.
+`emailError` is a short reason when every requested email failed, otherwise `null`.
+This route does not send WhatsApp.
+
+## POST `/api/internal/jobs/reminders`
+
+No member session. Requires `Authorization: Bearer <CRON_SECRET>`. Call once a
+day. Three days before the wedding date, pending guests are reminded to reply.
+On the day before and the day of an event, guests who accepted that event are
+reminded. Email is sent by the job. WhatsApp is stored as ready for a member to
+open. The same reminder is not sent twice.
+
+## GET `/api/guests/whatsapp-reminders`
+
+Authentication required. Returns ready WhatsApp reminders for the current wedding.
+
+## POST `/api/guests/whatsapp-reminders/:reminderId/open`
+
+Authentication required. Marks one ready WhatsApp reminder as opened by a member.
 
 ---
 
@@ -1921,6 +1984,7 @@ page
 limit
 
 category
+paymentKind
 eventId
 vendorId
 from
@@ -1948,6 +2012,7 @@ expenseDate DESC
   "currency": "INR",
   "expenseDate": "2026-09-01",
   "category": "PHOTOGRAPHY",
+  "paymentKind": "ADVANCE",
   "eventId": "...",
   "vendorId": "...",
   "notes": "Advance payment"
@@ -1976,7 +2041,16 @@ Authentication required.
 {
   "data": {
     "totalExpensePaise": 174250000,
+    "advancePaise": 15000000,
+    "advanceCount": 3,
     "currency": "INR",
+    "byPaymentKind": [
+      {
+        "paymentKind": "ADVANCE",
+        "amountPaise": 15000000,
+        "count": 3
+      }
+    ],
     "byCategory": [
       {
         "category": "VENUE",
@@ -1990,6 +2064,9 @@ Authentication required.
   }
 }
 ```
+
+`totalExpensePaise` sums actual payments, including advances and part
+payments. It is not an agreed vendor cost or an unpaid balance.
 
 ---
 
@@ -2054,6 +2131,7 @@ includeArchived
   "email": "...",
   "address": "...",
   "website": "...",
+  "meetingUrl": "https://meet.google.com/abc-defg-hij",
   "totalAgreedCostPaise": 20000000,
   "eventIds": ["..."],
   "notes": "Drone included"
@@ -2066,9 +2144,17 @@ Set:
 source = MANUAL
 ```
 
+`meetingUrl` is optional. It must be an `http` or `https` URL. The app stores and opens that link. It does not place the audio or video call, and it does not charge for it.
+
 ---
 
 # 61. Add Discovered Vendor
+
+Deferred. The original contract below is retained as product intent, not a
+live V1 route. See the vendor-discovery decision in `DECISIONS.md`: Google
+Places fields must not be automatically copied into permanent vendor records.
+Members can use the live discovery results to identify a vendor and then add
+their own details with `POST /api/vendors`.
 
 ## POST `/api/vendors/from-place`
 
@@ -2130,6 +2216,29 @@ rather than hard deleting.
 
 ---
 
+# 64a. Restore Vendor
+
+## POST `/api/vendors/:vendorId/restore`
+
+Authentication required.
+
+Clears `archivedAt` and returns the vendor to the active roster. Restoring a
+vendor that is not archived, or that belongs to another wedding, returns
+`NOT_FOUND`.
+
+### Response
+
+```json
+{
+  "data": {
+    "id": "...",
+    "archivedAt": null
+  }
+}
+```
+
+---
+
 # 65. Vendor Discovery
 
 ## GET `/api/vendor-discovery/search`
@@ -2141,8 +2250,8 @@ Authentication required.
 ```text
 category
 query
-latitude
-longitude
+lat
+lng
 ```
 
 The backend may default coordinates from Wedding if not provided.
@@ -2163,11 +2272,16 @@ Google Places
 Results
 ```
 
+The implemented endpoint accepts `lat` and `lng` as the coordinate pair. Paid
+Google searches are rate-limited per signed-in user. If
+`GOOGLE_PLACES_API_KEY` is not configured, it returns `NOT_CONFIGURED` (503)
+without calling Google and without consuming that rate limit.
+
 Or custom:
 
 ```text
-latitude=28.6139
-longitude=77.2090
+lat=28.6139
+lng=77.2090
 ```
 
 ---
@@ -2282,6 +2396,20 @@ is preferable to revealing unpublished wedding existence.
 ## GET `/api/wedding/livestream`
 
 Authentication required.
+
+### Response
+
+```json
+{
+  "data": {
+    "youtubeUrl": null,
+    "videoId": null,
+    "isEnabled": false
+  }
+}
+```
+
+Accepted links are `https` YouTube watch, live, embed, shorts, or `youtu.be` URLs. Enabling the stream requires a valid link. Clearing uses `youtubeUrl: null` and `isEnabled: false`. The public website embeds the player only when the website is published, the stream is enabled, and the link has a valid video id.
 
 ---
 
@@ -2645,6 +2773,8 @@ We do not need an independent Media Service API for V1.
 ---
 
 # 84. QR Code
+
+Implemented member endpoint `GET /api/gallery/qr` returns `{data: {path, isEnabled, guestUploadsEnabled}}`; the browser prefixes its current origin. `PATCH` accepts one or both boolean settings and updates only the fields sent. A missing stored flag is treated as enabled, matching the schema default and the guest album. Both require current wedding membership and return no-store responses. Guest routes are `/api/public/galleries/:token`, `/photos`, and `/upload-url`; `/upload-fallback` accepts a bounded raw body with `objectKey` query when direct R2 uploads are blocked. Guest upload reservation sets an httpOnly cookie scoped to that album. Confirm and fallback accept the upload only when the cookie matches the pending row. Guest responses never expose membership details, the ticket, or storage keys in photo listings.
 
 No database QR entity is required.
 
@@ -3776,7 +3906,9 @@ settings and QR remain deferred.
 
 - Upload requests accept JPEG, PNG and WebP, 1 byte through 10 MiB each. The UI
   selects at most 20 files per batch and uploads sequentially. No videos, SVG,
-  HEIC conversion, image editing, or bulk downloads/deletes in this increment.
+  HEIC conversion, image editing, or bulk deletes in this increment. Gallery ZIP
+  downloads are assembled in the browser from signed originals, limited to
+  100 MiB per selected album. R2 CORS must permit GET for the app origin.
 - The upload API reserves a server-issued staging key and binds its metadata to
   the authenticated wedding and membership. Its PUT URL lasts 10 minutes and
   signs Content-Type and Content-Length. Client bodies never supply weddingId.
@@ -3801,8 +3933,23 @@ settings and QR remain deferred.
 - DELETE returns `{ data: { success: true } }` after R2 deletion and metadata
   tombstoning. Storage failures retain metadata and return a retryable error.
 - Issuance is limited to 120 requests/member/15 minutes, then 600/wedding/15
-  minutes. Unauthenticated, malformed, and invalid-event requests do not consume
-  this quota. There is no application-wide photo quota shared by other weddings.
+  minutes, then 400 new uploads for the whole R2 account per day. Unauthenticated,
+  malformed, and invalid-event requests do not consume this quota. The free R2
+  account is shared, so every wedding together may keep 2,000 ready or pending
+  photos or 8 GiB, whichever is reached first. This supersedes the earlier
+  per-wedding 2,000-photo or 5 GiB cap. Each photo must be 4 MB or smaller.
+  Expired pending staging uploads are removed for that wedding before the next
+  upload link is issued. A full account returns 409. A used daily allowance
+  returns 429. Saved photos remain viewable either way.
 - Private metadata and URL responses use Cache-Control: no-store. Provider
   failures are mapped to a generic storage-unavailable error without logging
   keys, credentials, signed URLs or raw provider responses.
+
+Gallery refresh loads one cursor page for the selected album and signs each tile from stored metadata. It does not HEAD every object. Later pages load only when the member asks.
+Download still checks the object. Only a definitive object HEAD 404 tombstones missing metadata; permission errors
+and storage outages return an error without treating the object as deleted.
+If the browser cannot PUT directly to R2, the same reserved key is uploaded through `POST /api/photos/upload-fallback`. That route rejects a body over 4 MB before writing, and rejects a file whose bytes are not a JPEG, PNG, or WebP before the storage write.
+Albums use actual event IDs (including separate events of the same type), with
+an unassigned Wedding Memories album. Admins and Managers can delete photos
+through the app after confirmation. Storage account operators retain access to
+the underlying files; member-only application access is not end-to-end encryption.

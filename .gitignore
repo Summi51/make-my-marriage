@@ -2,6 +2,8 @@
 /.next/
 /out/
 /coverage/
+/test-results/
+/playwright-report/
 .env*
 !.env.example
 *.log
@@ -10,3 +12,7 @@
 .vscode/
 *.tsbuildinfo
 next-env.d.ts
+.augment/
+.tmp-manual/
+tmp/
+Untitled-1

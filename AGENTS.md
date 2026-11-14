@@ -31,3 +31,4 @@ When an older PRD detail conflicts with a newer aligned technical document, use 
 - Keep every change limited to the active milestone. Do not accidentally implement deferred routes, product modules, realtime behavior or provider integrations.
 - Before handoff run `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test` and `npm run build`. `npm run validate` runs that sequence.
 - Never commit secrets; document safe variable examples in `.env.example`.
+- After completing a major feature, update `docs/STATUS.md` with what was built and what remains next. Do not log small fixes, copy tweaks or refactors. `docs/STATUS.md` is a progress log only; it does not override `PRD.md`, `SYSTEM_DESIGN.md`, `DATABASE_DESIGN.md` or `API_DESIGN.md`.

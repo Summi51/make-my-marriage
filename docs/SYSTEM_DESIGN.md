@@ -1070,7 +1070,9 @@ Expense
  └── vendorId?
 ```
 
-The Expense Tracker does not implement budgets or payment schedules.
+Each Expense is an actual payment with a payment type. The Expense Tracker
+does not implement budgets, unpaid commitments, balances, or payment
+schedules.
 
 ---
 
@@ -2659,10 +2661,16 @@ browser), plus GET/PUT/HEAD methods and the allowed app origins. Never expose
 credentials or publicise the bucket. Development and production use separate
 bucket-scoped credentials; Preview deployments still require their own setup.
 
-The browser uploads directly to a staging key. The server verifies length, MIME,
-and a 16-byte format signature, pinning inspection and copying to the same ETag.
+The browser uploads directly to a staging key when bucket CORS allows it. The
+live free R2 account cannot edit CORS, so production falls back to a same-origin
+upload of the same staging key. That fallback is limited to 4 MB and checks the
+image signature before writing. The server then verifies length, MIME, and a
+16-byte format signature, pinning inspection and copying to the same ETag.
 R2 copies into an independent final key, then MongoDB atomically publishes the
-row. Neither the upload body nor downloaded originals pass through an app API.
+row. Downloaded originals do not pass through an app API. Gallery listing signs
+from metadata so opening the gallery does not spend a storage read per photo.
+The shared free account stops new uploads at 8 GiB, 2,000 photos, or 400 uploads
+a day. See `docs/DECISIONS.md`.
 See the API and database lifecycle clarifications for retry and deletion rules.
 
 The initial browser uses lazy-loaded originals with cursor pagination, and

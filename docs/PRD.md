@@ -771,7 +771,9 @@ Make My Marriage does not automatically send WhatsApp messages in V1.
 
 # 9.15 Expense Tracker
 
-The Expense Tracker records money already spent or committed for the wedding.
+The Expense Tracker records money already paid for the wedding, including
+advances and part payments. Unpaid commitments and remaining balances are
+outside this milestone (see `DECISIONS.md`).
 
 It is not a budgeting system.
 
@@ -779,6 +781,7 @@ It is not a budgeting system.
 
 - Expense title
 - Amount
+- Payment type (paid in full, advance, part payment, final payment)
 - Date
 - Category
 - Related Event
