@@ -1,10 +1,10 @@
-# Make My Marriage
+# Wedding Made Easy
 
 Plan one wedding in one private place. Couples and family keep the schedule, guests, budget, vendors, and photos together, then share a public page that guests can actually open.
 
 **Live dev site:** [https://dev.debru5zwxk5qm.amplifyapp.com](https://dev.debru5zwxk5qm.amplifyapp.com)
 
-The homepage opens with a muted celebration film. Guests can play it, turn the sound on, or watch it full screen. The same film is used on Wedding Made Easy.
+The homepage opens with a muted celebration film. Guests can play it, turn the sound on, or watch it full screen. The same film is used on Make My Marriage.
 
 ## Plan together
 
@@ -48,7 +48,7 @@ npm run test:e2e
 
 ## Stack
 
-Next.js modular monolith, MongoDB, session cookies, and Zod validation. Routes and screens live in `src/app/`. Wedding rules live in `src/modules/`. Shared server code lives in `src/server/`. Product decisions live in `docs/`. See `AGENTS.md` for the repository boundaries.
+Next.js modular monolith, MongoDB, session cookies, and Zod validation. Routes and screens live in `src/app/`. Wedding rules live in `src/modules/`. Shared server code lives in `src/server/`.
 
 ## License
 
