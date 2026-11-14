@@ -6,6 +6,10 @@ Plan one wedding in one private place. Couples and family keep the schedule, gue
 
 The homepage opens with a muted celebration film. Guests can play it, turn the sound on, or watch it full screen. The same film is used on Wedding Made Easy.
 
+https://github.com/Summi51/make-my-marridge/raw/main/public/videos/hero-wedding.mp4
+
+[Watch the celebration film](https://dev.debru5zwxk5qm.amplifyapp.com/)
+
 ## Live Amplify links
 
 | Page | Link |
