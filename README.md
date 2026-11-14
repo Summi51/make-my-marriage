@@ -1,10 +1,24 @@
-# Wedding Made Easy
+# Make My Marriage
 
 Plan one wedding in one private place. Couples and family keep the schedule, guests, budget, vendors, and photos together, then share a public page that guests can actually open.
 
 **Live dev site:** [https://dev.debru5zwxk5qm.amplifyapp.com](https://dev.debru5zwxk5qm.amplifyapp.com)
 
-The homepage opens with a muted celebration film. Guests can play it, turn the sound on, or watch it full screen. The same film is used on Make My Marriage.
+The homepage opens with a muted celebration film. Guests can play it, turn the sound on, or watch it full screen. The same film is used on Wedding Made Easy.
+
+## Live Amplify links
+
+| Page | Link |
+| --- | --- |
+| Home | [https://dev.debru5zwxk5qm.amplifyapp.com](https://dev.debru5zwxk5qm.amplifyapp.com) |
+| Sign up | [https://dev.debru5zwxk5qm.amplifyapp.com/signup](https://dev.debru5zwxk5qm.amplifyapp.com/signup) |
+| Log in | [https://dev.debru5zwxk5qm.amplifyapp.com/login](https://dev.debru5zwxk5qm.amplifyapp.com/login) |
+| Wedding home | [https://dev.debru5zwxk5qm.amplifyapp.com/account](https://dev.debru5zwxk5qm.amplifyapp.com/account) |
+| How it works | [https://dev.debru5zwxk5qm.amplifyapp.com/how-it-works](https://dev.debru5zwxk5qm.amplifyapp.com/how-it-works) |
+| Help | [https://dev.debru5zwxk5qm.amplifyapp.com/help](https://dev.debru5zwxk5qm.amplifyapp.com/help) |
+| Health | [https://dev.debru5zwxk5qm.amplifyapp.com/api/health](https://dev.debru5zwxk5qm.amplifyapp.com/api/health) |
+
+The `main` branch URL, `https://main.debru5zwxk5qm.amplifyapp.com`, is not deployed. Use the dev link above.
 
 ## Plan together
 
@@ -31,7 +45,7 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000). Health check: [http://localhost:3000/api/health](http://localhost:3000/api/health).
 
-Set `MONGODB_URI` before creating accounts. In production, set `APP_ORIGIN` to the public HTTPS address so invitation links are not stuck on localhost. Add email, gallery, reminder, vendor-search, and help-widget values only when you turn those features on. Keep real values out of git.
+Set `MONGODB_URI` before creating accounts. In production, set `APP_ORIGIN` to `https://dev.debru5zwxk5qm.amplifyapp.com` so invitation links are not stuck on localhost. Add email, gallery, reminder, vendor-search, and help-widget values only when you turn those features on. Keep real values out of git.
 
 ## Check the app
 
@@ -48,7 +62,7 @@ npm run test:e2e
 
 ## Stack
 
-Next.js modular monolith, MongoDB, session cookies, and Zod validation. Routes and screens live in `src/app/`. Wedding rules live in `src/modules/`. Shared server code lives in `src/server/`.
+Next.js modular monolith, MongoDB, session cookies, and Zod validation. Routes and screens live in `src/app/`. Wedding rules live in `src/modules/`. Shared server code lives in `src/server/`. Product decisions live in `docs/`. See `AGENTS.md` for the repository boundaries.
 
 ## License
 
